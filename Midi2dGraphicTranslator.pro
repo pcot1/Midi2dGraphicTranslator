@@ -1,5 +1,5 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    RtMidi \
+    libRtMidi \
     translatorControl
