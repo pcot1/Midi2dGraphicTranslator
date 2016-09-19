@@ -13,6 +13,7 @@ CONFIG += staticlib
 SOURCES += RtMidi.cpp
 HEADERS += RtMidi.h
 
+LIBS += -L/C/Windows/System32 -lwinmm
 #
 #unix {
 #    target.path = /usr/lib

@@ -1,16 +1,23 @@
 #define DEBUG
-#include "MidiGraphicTranslator.h"
+#include "midiGraphicTranslator.h"
 
-                                                                        // managing index rules
+// debug
+char bla[128];
+#include "graphicDisplayer.h"
+extern GraphicDisplayer *grDispl;
+
+
+                                                                     // managing index rules
 inline int displayId2internalId(int i) {return(i-1);}                       // first internalId is 0
 inline int internalId2displayId(int i) {return(i+1);}                       // first displayId is 1
 
 int MidiGraphicTranslator::nbCreated = 0;
 
-MidiGraphicTranslator::MidiGraphicTranslator(QWidget *pparent) : QGroupBox(pparent)
+// *** Constructor
+MidiGraphicTranslator::MidiGraphicTranslator(QWidget *pparent) : QGroupBox(pparent), MidiventConsumer()
 {
                                                                        // set Translator instanceId and title
-    char bla[128];
+    //char bla[128];
     instanceId=nbCreated;
     ++nbCreated;
     sprintf(bla,"Graphic Translator #%02d",internalId2displayId(instanceId));
@@ -20,7 +27,8 @@ MidiGraphicTranslator::MidiGraphicTranslator(QWidget *pparent) : QGroupBox(ppare
     MidiGraphicTranslatorName = new QLineEdit(bla);
     quit_Button = new QPushButton();
     quit_Button->setIcon(QIcon("./power-icon.png"));
-    QHBoxLayout *header_Layout = new QHBoxLayout;
+    //QHBoxLayout *header_Layout = new QHBoxLayout;
+    header_Layout = new QHBoxLayout;
     header_Layout->addWidget(MidiGraphicTranslatorName);
     header_Layout->addWidget(quit_Button);
     QObject::connect(quit_Button,SIGNAL(clicked()),this,SLOT(terminate()));
@@ -34,7 +42,8 @@ MidiGraphicTranslator::MidiGraphicTranslator(QWidget *pparent) : QGroupBox(ppare
     Forward_Button->setMaximumSize(smallButtonWidth,smallButtonHeight);
     FastForward_Button = new QPushButton(">|");
     FastForward_Button->setMaximumSize(smallButtonWidth,smallButtonHeight);
-    QHBoxLayout *rendererOrder_Layout = new QHBoxLayout;
+    //QHBoxLayout *rendererOrder_Layout = new QHBoxLayout;
+    rendererOrder_Layout = new QHBoxLayout;
     rendererOrder_Layout->addWidget(FastReverse_Button);
     rendererOrder_Layout->addWidget(Reverse_Button);
     rendererOrder_Layout->addWidget(Forward_Button);
@@ -52,25 +61,56 @@ MidiGraphicTranslator::MidiGraphicTranslator(QWidget *pparent) : QGroupBox(ppare
     MidiSources_ComboBox->setCurrentIndex(0);
     PRINTF(("MidiSources_ComboBox current index %d\n",MidiSources_ComboBox->currentIndex()));
     MidiSourceId = undefinedMidiSource;
-    QHBoxLayout *MidiSource_Layout = new QHBoxLayout;
+    //QHBoxLayout *MidiSource_Layout = new QHBoxLayout;
+    MidiSource_Layout = new QHBoxLayout;
     MidiSource_Layout->addWidget(MidiSource_Label);
     MidiSource_Layout->addWidget(MidiSources_ComboBox);
     QObject::connect(MidiSources_ComboBox,SIGNAL(currentIndexChanged(int)),this,SLOT(changingMidiSource(int)));
     QObject::connect(this,SIGNAL(unRegisterMidiSource(int)),pparent,SLOT(removeConsumerRequest(int)));
     QObject::connect(this,SIGNAL(registerMidiSource(int)),pparent,SLOT(addConsumerRequest(int)));
-                                                                      // GroupBox Vertical Layout
-    QVBoxLayout *MidiGraphicTranslatorGroupLayout = new QVBoxLayout;
+                                                                    // GroupBox Vertical Layout
+    //QVBoxLayout *MidiGraphicTranslatorGroupLayout = new QVBoxLayout;
+    MidiGraphicTranslatorGroupLayout = new QVBoxLayout;
     MidiGraphicTranslatorGroupLayout->addLayout(header_Layout);
     MidiGraphicTranslatorGroupLayout->addLayout(rendererOrder_Layout);
     MidiGraphicTranslatorGroupLayout->addLayout(MidiSource_Layout);
     setLayout(MidiGraphicTranslatorGroupLayout);
+                                                                    // the layer of the graphic scene of this translator
+    graphicLayer = new QGraphicsItemGroup();
+    QList <QGraphicsItem *> itemList = graphicLayer->childItems();
+    PRINTF(("Translator #%02d (0x%p) groupItem 0x%p contient %d items \n",internalId2displayId(instanceId),this,graphicLayer,itemList.size()));
+// Debug
+    /*
+    PRINTF(("Graphic Translator %d is %p\n",instanceId,this));
+    Midivent evt(NoteOn,64);
+    evt.printObject();
+    receiveMidivent(&evt);
+    */
 }
 
-MidiGraphicTranslator::~MidiGraphicTranslator()
+// *** Destructor
+MidiGraphicTranslator::~MidiGraphicTranslator(void)
 {
     if (MidiSourceId > undefinedMidiSource)                         // the Translator is no longer a MidiSource consumer
         emit unRegisterMidiSource(MidiSourceId);
 
+}
+
+void MidiGraphicTranslator::printObject(void) const
+{
+    PRINTF((">>> printObject: MidiGraphicTranslator[%1d] showed as #%02d is 0x%p\n",instanceId,internalId2displayId(instanceId),this));
+}
+
+// *** accessor
+int MidiGraphicTranslator::getInstanceId(void) const
+{
+    return(instanceId);
+}
+
+// *** accessor
+QGraphicsItemGroup *MidiGraphicTranslator::getGraphics(void) const
+{
+    return(graphicLayer);
 }
 
 void MidiGraphicTranslator::updateListOfMidiSourcesInComboBox(int nbMS)
@@ -119,26 +159,6 @@ void MidiGraphicTranslator::requireWidgetMvtFastForward(void)   {
 }
 
 
-int MidiGraphicTranslator::getInstanceId(void) const
-{
-    return(instanceId);
-}
-
-void MidiGraphicTranslator::recieveMidivent(Midivent &evt)
-{
-    printf("Translator %02d recieving Midivent: ", this->instanceId);
-    switch (evt.getType())  {
-        case None:
-            printf("None\n"); break;
-        case NoteOn:
-            printf("NoteOn %3d\n",evt.getNote()); break;
-        case NoteOff:
-            printf("NoteOff %3d\n",evt.getNote()); break;
-        default:
-            printf("unknown \"%d\", \"%d\"\n",evt.getType(),evt.getNote()); break;
-    }
-}
-
 void MidiGraphicTranslator::changingMidiSource(int displayId)
 {
     if (displayId == undefinedMidiSource)               // the ComboBox is not initialized
@@ -153,8 +173,66 @@ void MidiGraphicTranslator::changingMidiSource(int displayId)
     emit registerMidiSource(MidiSourceId);
 }
 
-void MidiGraphicTranslator::recieveNumberOfMidiSources(int nbMS)
+void MidiGraphicTranslator::receiveNumberOfMidiSources(int nbMS)
 {
-    PRINTF(("recieveNumberOfMidiSources(%d) in instance %d \n",nbMS,instanceId));
+    PRINTF(("receiveNumberOfMidiSources(%d) in instance %d \n",nbMS,instanceId));
     updateListOfMidiSourcesInComboBox(nbMS);
+}
+
+// *** generate a point coordinate in the world
+QPointF MidiGraphicTranslator::generateRandomWorldCoordinates(void) const
+{
+    const float zoomer = 32.0;
+    int SX = (int) (worldWidth * zoomer);
+    int SY = (int) (worldHeight * zoomer);
+    int DX = (int) (worldUpLeftX * zoomer);
+    int DY = (int) (worldUpLeftY * zoomer);
+    PRINTF(("SX %d SY %d DX %d DY %d => (%+3.1f,%+3.1f)\n",SX,SY,DX,DY,(qreal)(DX + (rand()%SX)) / zoomer,(qreal)(DY + (rand()%SY)) / zoomer));
+    return(QPointF((qreal) (DX + (rand()%SX)) / zoomer,(qreal) (DY + (rand()%SY)) / zoomer));
+}
+
+// *** transform a Midivent in graphic action
+void MidiGraphicTranslator::receiveMidivent(Midivent *pevt)
+{
+    //char bla[64];
+    QGraphicsTextItem *pText = new  QGraphicsTextItem;
+    QPointF where = generateRandomWorldCoordinates();
+    QList <QGraphicsItem *> itemList;
+
+    PRINTF(("Translator #%02d (0x%p) receiving Midivent 0x%p that contains ... ", internalId2displayId(instanceId),this,pevt));
+    switch (pevt->getType())  {
+        case None:
+            PRINTF(("None\n")); break;
+        case NoteOn:
+            PRINTF(("NoteOn %3d\n",pevt->getNote()));
+            PRINTF(("update Translator graphic Layer 0x%p\n",graphicLayer));
+            grDispl->removeItemFromScene(graphicLayer);
+            PRINTF(("drawing text 0x%p in (%+3.1f,%+3.1f)\n",pText,where.x(),where.y()));
+            sprintf(bla,"#%02d: (%+3.1f,%+3.1f)",instanceId,where.x(),where.y());
+            pText->setPlainText(QString(bla));
+            pText->setPos(where);
+            PRINTF(("add text 0x%p to group 0x%p\n",pText,graphicLayer));
+            //grDispl->drawSomething();
+            //grDispl->addItemInScene(pText);
+            graphicLayer->addToGroup((QGraphicsItem *)(pText));
+            //graphicLayer->update();
+            itemList = graphicLayer->childItems();
+            PRINTF(("groupItem 0x%p contient %d items\n",graphicLayer,itemList.size()));
+            grDispl->addItemToScene(graphicLayer);
+            grDispl->update();
+            break;
+        case NoteOff:
+            PRINTF(("NoteOff %3d\n",pevt->getNote()));
+            itemList = graphicLayer->childItems();
+            PRINTF(("groupItem 0x%p contient %d items before \n",graphicLayer,itemList.size()));
+            for (int i = 0; i < itemList.size(); i++) {
+                //graphicLayer->removeFromGroup(itemList.at(i));
+                (graphicLayer->scene())->removeItem(itemList.at(i));
+            }
+            itemList = graphicLayer->childItems();
+            PRINTF(("groupItem 0x%p contient %d items after\n",graphicLayer,itemList.size()));
+            break;
+        default:
+            PRINTF(("unknown \"%d\", \"%d\"\n",pevt->getType(),pevt->getNote()));
+    }
 }

@@ -1,67 +1,59 @@
-#ifndef GUI_H
-#define GUI_H
+#ifndef GRAPHICDISPLAYER_H
+#define GRAPHICDISPLAYER_H
+#include <stdio.h>
+#include <typeinfo>
 #include <Qt>
 #include <QWidget>
-#include <QDial>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QGridLayout>
-#include <QMessageBox>
-#include <MidiSource.h>
-#include <MidiGraphicTranslator.h>
-#include <iostream>
+#include <QGraphicsItem>
+#include <QGraphicsItemGroup>
+#include <QGraphicsScene>
+#include <QGraphicsView>
+#include <QResizeEvent>
+#include "world.h"
+
 #ifdef DEBUG
 #define PRINTF(args)    printf args
 #else
 #define PRINTF(args)
 #endif
 
-const int nbMaxMidiSources = 16;
-const int nbMaxMidiSourcesPerRow = 8;
-const int nbMaxMidiGraphicTranslators = 16;
-const int nbMaxMidiGraphicTranslatorsPerRow = 8;
-const int widthLayoutActiveCell = 140;
-const int widthLayoutControlCell = 90;
+const int viewZoomScene = 1.0;
+const int initialViewportWidth  = (int)(viewZoomScene*worldWidth);
+const int initialViewportHeight = (int)(viewZoomScene*worldHeight);
 
-class Gui : public QWidget
+/*********************************************************************************************************************/
+//
+// GraphicDisplayer : 2D Graphic Rendering Machine = scene + window
+//      each Graphic Translator has its own item that includes items it wants to display
+//
+/*********************************************************************************************************************/
+
+
+class GraphicDisplayer : public QWidget
 {
     Q_OBJECT
 
 public:
-    Gui();
-    ~Gui();
-    int getNbMidiSources(void);
-    int getNbMidiGraphicTranslators(void);
-public slots:
-    void removeWidgetsFromGuiLayout(void);
-    void installWidgetsInGuiLayout(void);
-    void setNbMidiSources(int);
-    void addMidiGraphicTranslator(void);
-    void deleteMidiGraphicTranslator(int id);
-    void moveMidiGraphicTranslators(int translatorInstanceId, int mvt);
-    void addConsumerRequest(int MidiSourceId);
-    void removeConsumerRequest(int MidiSourceId);
+    GraphicDisplayer();
+    ~GraphicDisplayer();
+    void cleanScene(void);                                  // empty the scene
+    void removeItemFromScene(QGraphicsItem *item);          // remove an item from the scene
+    void addItemToScene(QGraphicsItem *item);               // add an item to the scene (on top)
+    void printObject(void) const;                           // debug
+    void update(void);
+    void drawSomething(void);                               // draw something on the screen for debug
+
+protected:
+    void resizeEvent(QResizeEvent *event);                  // process user action of resizing the rendering window
+    void printSceneDescription(void) const;
+
 private:
-    int    nbMidiSources;                                  // Midi Sources Ctrl
-    QDial *nbMidiSources_Dial;
-    QLabel *nbMidiSources_Label;
-    QVBoxLayout *MidiSourcesCtrl_Layout;
-    MidiSource *MidiSources[nbMaxMidiSources];
-    void propagateNbMidiSourcesUpdate(void);
-    int    nbMidiGraphicTranslators;                        // Midi Graphic Translators Ctrl
-    QLabel *nbMidiGraphicTranslators_Label;
-    QPushButton *addMidiGraphicTranslators_Button;
-    QVBoxLayout *MidiGraphicTranslatorsCtrl_Layout;
-    MidiGraphicTranslator *MidiGraphicTranslators[nbMaxMidiGraphicTranslators];
-    int translatorInstanceIds[nbMaxMidiGraphicTranslators];
-    int translatorRenderingOrder[nbMaxMidiGraphicTranslators];
-                                                            // Gui Layout
-    QGridLayout *layout;
-    int MidiSourcesFirstRow;
-    int MidiSourcesNbRows;
-    int MidiGraphicTranslatorsFirstRow;
-    int MidiGraphicTranslatorsNbRows;
-    void printObject(void) const;
+    QGraphicsScene *scene;                                  // the scene (abstract world containing graphic items)
+    QRectF sceneRectangle;                                  // part of the world to render
+    QGraphicsView *view;                                    // the view = projection of scene to window
+    QTransform scene2ViewMatrix;                            // the matrix to project scene coordinates into view coordinates
+    void updateSceneRectangle(void);                        // recompute all scene-view relationship (after a view window user resize)
+    void updateScene2ViewMatrix(void);                      // recompute matrix (after a view window user resize)
 };
 
-#endif // GUI_H
+#endif // GRAPHICDISPLAYER_H

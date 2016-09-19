@@ -1,12 +1,15 @@
-#ifndef MIDICONSUMER_H
-#define MIDICONSUMER_H
+#ifndef MIDIVENTCONSUMER_H
+#define MIDIVENTCONSUMER_H
 #include <stdio.h>
-#include "Midivent.h"
+#include "midivent.h"
 
-class MidiConsumer
+class MidiventConsumer
 {
 public:
-    virtual void recieveMidivent(Midivent &evt) = 0;
+    MidiventConsumer(void);
+    virtual ~MidiventConsumer(void);
+    virtual void receiveMidivent(Midivent *pevt) = 0;
+    virtual void printObject(void) const;
 };
 
-#endif // MIDICONSUMER_H
+#endif // MIDIVENTCONSUMER_H

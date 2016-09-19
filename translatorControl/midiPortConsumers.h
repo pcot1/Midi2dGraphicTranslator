@@ -1,70 +1,35 @@
-#ifndef GUI_H
-#define GUI_H
-#include <Qt>
-#include <QWidget>
-#include <QDial>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QGridLayout>
-#include <QMessageBox>
-#include <MidiSource.h>
-#include <MidiGraphicTranslator.h>
-#include <graphicDisplayer.h>
-#include <iostream>
+#ifndef MIDIPORTCONSUMERS_H
+#define MIDIPORTCONSUMERS_H
+#include <stdio.h>
+#include "midiSource.h"
+
 #ifdef DEBUG
 #define PRINTF(args)    printf args
 #else
 #define PRINTF(args)
 #endif
 
-const int nbMaxMidiSources = 16;
-const int nbMaxMidiSourcesPerRow = 8;
-const int nbMaxMidiGraphicTranslators = 16;
-const int nbMaxMidiGraphicTranslatorsPerRow = 8;
-const int widthLayoutActiveCell = 140;
-const int widthLayoutControlCell = 90;
+const int nbMaxMidiPortConsumers = 16;
 
-class Gui : public QWidget
+/*********************************************************************************************************************/
+//
+// List of 1 Midi port consumers
+//
+/*********************************************************************************************************************/
+
+class MidiPortConsumers
 {
-    Q_OBJECT
-
 public:
-    Gui();
-    ~Gui();
-    int getNbMidiSources(void);
-    int getNbMidiGraphicTranslators(void);
-public slots:
-    void removeWidgetsFromGuiLayout(void);
-    void installWidgetsInGuiLayout(void);
-    void setNbMidiSources(int);
-    void addMidiGraphicTranslator(void);
-    void deleteMidiGraphicTranslator(int id);
-    void moveMidiGraphicTranslators(int translatorInstanceId, int mvt);
-    void addConsumerRequest(int MidiSourceId);
-    void removeConsumerRequest(int MidiSourceId);
-private:
-    void printObject(void) const;
-    int    nbMidiSources;                                  // Midi Sources Ctrl
-    QDial *nbMidiSources_Dial;
-    QLabel *nbMidiSources_Label;
-    QVBoxLayout *MidiSourcesCtrl_Layout;
-    MidiSource *MidiSources[nbMaxMidiSources];
-    void propagateNbMidiSourcesUpdate(void);
-    int    nbMidiGraphicTranslators;                        // Midi Graphic Translators Ctrl
-    QLabel *nbMidiGraphicTranslators_Label;
-    QPushButton *addMidiGraphicTranslators_Button;
-    QVBoxLayout *MidiGraphicTranslatorsCtrl_Layout;
-    MidiGraphicTranslator *MidiGraphicTranslators[nbMaxMidiGraphicTranslators];
-    int translatorInstanceIds[nbMaxMidiGraphicTranslators];
-    int translatorRenderingOrder[nbMaxMidiGraphicTranslators];
-                                                            // Gui Layout
-    QGridLayout *layout;
-    int MidiSourcesFirstRow;
-    int MidiSourcesNbRows;
-    int MidiGraphicTranslatorsFirstRow;
-    int MidiGraphicTranslatorsNbRows;
-                                                            // GraphicDisplayer (2D rendering engine + window)
-    GraphicDisplayer *gDispl;
+    MidiPortConsumers();
+    ~MidiPortConsumers();
+    int getNbMidiPortConsumers(void);                     // accessor
+    MidiSource *getMidiPortConsumer(int index);           // accessor
+    void removeAllMidiPortConsumers(void);                // empty list
+    void addConsumer(MidiSource * consumer);                // add a Midi port consumer to the list
+    void printObject(void) const;                           // debug
+private :
+    int nbMidiPortConsumers;                              // nb of the Midi port consumers in the list
+    MidiSource *midiPortConsumers[nbMaxMidiPortConsumers];  // list of the Midi Port consumer
 };
 
-#endif // GUI_H
+#endif // MIDIPORTCONSUMERS_H

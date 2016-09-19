@@ -1,19 +1,13 @@
-#ifndef GUI_H
-#define GUI_H
+#ifndef RTMIDIPORTS_H
+#define RTMIDIPORTS_H
 #include <stdio.h>
-#include <Qt>
-#include <QWidget>
-#include <QDial>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QGridLayout>
+#include <vector>
+#include <QStringList>
+#include <QStringList>
 #include <QMessageBox>
 #include "RtMidi.h"
-#include "Midivent.h"
-#include "rtMidiPortConsumers.h"
-#include "MidiSource.h"
-#include "MidiGraphicTranslator.h"
-#include "graphicDisplayer.h"
+#include "midiPortConsumers.h"
+#include "midiSource.h"
 
 #ifdef DEBUG
 #define PRINTF(args)    printf args
@@ -23,64 +17,42 @@
 
 const int nbMaxRtMidiPorts = 16;
 
-const int nbMaxMidiSources = 16;
-const int nbMaxMidiSourcesPerRow = 8;
-const int nbMaxMidiGraphicTranslators = 16;
-const int nbMaxMidiGraphicTranslatorsPerRow = 8;
-const int widthLayoutActiveCell = 140;
-const int widthLayoutControlCell = 90;
+typedef std::vector<unsigned char> MidiMessage;
 
-class Gui : public QWidget
+/*********************************************************************************************************************/
+//
+// MidiPort centralizer: only 1 allowed "open" for a given Midi port inside a RtMidi application
+//
+/*********************************************************************************************************************/
+
+class RtMidiPorts : public QLabel
 {
     Q_OBJECT
 
 public:
+                                                    // the RtMidi Lib callback (function, not method)
     static void rtMidiCallBack(double deltatime, std::vector<unsigned char> *message, void *userData);
-    Gui();
-    ~Gui();
-    int getNbRtMidiPorts(void);
-    QStringList *getRtMidiInPortNames;
-    int getNbMidiSources(void);
-    int getNbMidiGraphicTranslators(void);
-public slots:
-    void removeWidgetsFromGuiLayout(void);
-    void installWidgetsInGuiLayout(void);
-    void setNbMidiSources(int);
-    void addMidiGraphicTranslator(void);
-    void deleteMidiGraphicTranslator(int id);
-    void moveMidiGraphicTranslators(int translatorInstanceId, int mvt);
-    void addConsumerRequest(int MidiSourceId);
-    void removeConsumerRequest(int MidiSourceId);
-private:
-    void printObject(void) const;
-                                                            // RtMidi Ports Management
-    int    nbMidiPorts;
-    RtMidiIn *rtMidiInPorts[nbMaxMidiPorts];
-    RtMidiPortConsumers *rtMidiPortConsumers[nbMaxMidiPorts];
-    QStringList *rtMidiInPortNames;
-    voidscanMidiInputPorts(void);
+    static RtMidiPorts* theRtMidiPortsManager;      // last (usually uniic) rtMidiPorts created
 
-    int    nbMidiSources;                                   // Midi Sources Ctrl
-    QDial *nbMidiSources_Dial;
-    QLabel *nbMidiSources_Label;
-    QVBoxLayout *MidiSourcesCtrl_Layout;
-    MidiSource *MidiSources[nbMaxMidiSources];
-    void propagateNbMidiSourcesUpdate(void);
-    int    nbMidiGraphicTranslators;                        // Midi Graphic Translators Ctrl
-    QLabel *nbMidiGraphicTranslators_Label;
-    QPushButton *addMidiGraphicTranslators_Button;
-    QVBoxLayout *MidiGraphicTranslatorsCtrl_Layout;
-    MidiGraphicTranslator *MidiGraphicTranslators[nbMaxMidiGraphicTranslators];
-    int translatorInstanceIds[nbMaxMidiGraphicTranslators];
-    int translatorRenderingOrder[nbMaxMidiGraphicTranslators];
-                                                            // Gui Layout
-    QGridLayout *layout;
-    int MidiSourcesFirstRow;
-    int MidiSourcesNbRows;
-    int MidiGraphicTranslatorsFirstRow;
-    int MidiGraphicTranslatorsNbRows;
-                                                            // GraphicDisplayer (2D rendering engine + window)
-    GraphicDisplayer *gDispl;
+    RtMidiPorts();                                    // constructor discovers existing Midi ports
+    ~RtMidiPorts();
+    int getNbRtMidiPorts(void);                       // accessor
+    QStringList *getRtMidiPortsNames(void);           // accessor
+    MidiPortConsumers *getConsumersOfMidiPortIndex(int id);   // accessor
+    void printObject(void) const;                       // debug
+    Q_INVOKABLE void receiveMidiMessage(MidiMessage message, int portIndex);
+    //Q_INVOKABLE void receiveMidiMessage(void);
+
+private:
+                                                        // should be used before instrance intialized
+    static int scanRtMidiPortsNames(QWidget *widget, RtMidiIn *pRtMidiPort, QStringList &existingMidiPortsNames);
+    //static int scanRtMidiPortsNames(RtMidiIn *pRtMidiPort, QStringList &existingMidiPortsNames);
+                                                    // RtMidi Ports Management
+    int nbRtMidiPorts;                                // nb of Midi ports  discovered using RtMidi lib
+    RtMidiIn *rtMidiPorts[nbMaxRtMidiPorts];        // list of Midi ports
+    MidiPortConsumers *rtMidiPortConsumers[nbMaxRtMidiPorts];   // list of consumer of each Midi port
+    QStringList rtMidiPortsNames;                     // Midi ports names
+    void startUseOfRtMidiPorts(void);                 // open and set callback for discovered Midi ports
 };
 
-#endif // GUI_H
+#endif // RTMIDIPORTS_H

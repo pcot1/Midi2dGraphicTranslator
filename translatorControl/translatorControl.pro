@@ -14,16 +14,23 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         gui.cpp \
-    MidiConsumer.cpp \
-    MidiGraphicTranslator.cpp \
-    MidiSource.cpp \
-    Midivent.cpp
+    graphicDisplayer.cpp \
+    rtMidiPorts.cpp \
+    midiGraphicTranslator.cpp \
+    midiPortConsumers.cpp \
+    midiSource.cpp \
+    midivent.cpp \
+    midiventConsumer.cpp
 
 HEADERS  += gui.h \
-    MidiConsumer.h \
-    MidiGraphicTranslator.h \
-    MidiSource.h \
-    Midivent.h
+    graphicDisplayer.h \
+    world.h \
+    rtMidiPorts.h \
+    midivent.h \
+    midiGraphicTranslator.h \
+    midiPortConsumers.h \
+    midiSource.h \
+    midiventConsumer.h
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../libRtMidi/release/ -llibRtMidi
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../libRtMidi/debug/ -llibRtMidi
