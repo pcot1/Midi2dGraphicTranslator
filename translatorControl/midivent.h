@@ -1,12 +1,7 @@
 #ifndef MIDIVENT_H
 #define MIDIVENT_H
 #include <stdio.h>
-
-#ifdef DEBUG
-#define PRINTF(args)    printf args
-#else
-#define PRINTF(args)
-#endif
+#include "logging.h"
 
 typedef enum midiventTypeName { None, NoteOn, NoteOff } MidiventTypeName;
 

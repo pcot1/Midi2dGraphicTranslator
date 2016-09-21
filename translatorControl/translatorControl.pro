@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     midiPortConsumers.cpp \
     midiSource.cpp \
     midivent.cpp \
-    midiventConsumer.cpp
+    midiventConsumer.cpp \
+    logging.cpp
 
 HEADERS  += gui.h \
     graphicDisplayer.h \
@@ -30,7 +31,8 @@ HEADERS  += gui.h \
     midiGraphicTranslator.h \
     midiPortConsumers.h \
     midiSource.h \
-    midiventConsumer.h
+    midiventConsumer.h \
+    logging.h
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../libRtMidi/release/ -llibRtMidi
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../libRtMidi/debug/ -llibRtMidi
@@ -44,3 +46,6 @@ else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PW
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../libRtMidi/debug/libRtMidi.lib
 
 LIBS += -L/C/Windows/System32 -lwinmm
+
+DISTFILES += \
+    qtlogging.ini

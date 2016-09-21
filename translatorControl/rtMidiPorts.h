@@ -1,19 +1,13 @@
 #ifndef RTMIDIPORTS_H
 #define RTMIDIPORTS_H
 #include <stdio.h>
+#include "logging.h"
 #include <vector>
-#include <QStringList>
 #include <QStringList>
 #include <QMessageBox>
 #include "RtMidi.h"
 #include "midiPortConsumers.h"
 #include "midiSource.h"
-
-#ifdef DEBUG
-#define PRINTF(args)    printf args
-#else
-#define PRINTF(args)
-#endif
 
 const int nbMaxRtMidiPorts = 16;
 

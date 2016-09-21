@@ -31,7 +31,7 @@ void Midivent::printObject(void) const
         default:
            sprintf(bla,"Unknown");
     }
-    PRINTF(("Midivent = (%s,%d)\n",bla,noteId));
+    qCDebug(Mvent,"Midivent = (%s,%d)\n",bla,noteId);
 }
 
 // *** accessor

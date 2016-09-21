@@ -14,12 +14,6 @@
 #include "midiGraphicTranslator.h"
 #include "graphicDisplayer.h"
 
-#ifdef DEBUG
-#define PRINTF(args)    printf args
-#else
-#define PRINTF(args)
-#endif
-
 const int nbMaxMidiSources = 16;
 const int nbMaxMidiSourcesPerRow = 8;
 const int nbMaxMidiGraphicTranslators = 16;

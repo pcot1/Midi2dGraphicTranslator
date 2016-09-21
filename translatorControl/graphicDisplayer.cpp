@@ -1,4 +1,4 @@
-#define DEBUG
+//#define DEBUG
 #include "graphicDisplayer.h"
 
 GraphicDisplayer *grDispl;
@@ -6,6 +6,7 @@ GraphicDisplayer *grDispl;
 // *** Constructor
 GraphicDisplayer::GraphicDisplayer() : QWidget()
 {
+    qCInfo(GRinit,"entering GraphicDisplayer constructor\n");
                                                                     // Scene
     scene = new QGraphicsScene;                                         // create Qt scene object
     sceneRectangle = QRectF(worldUpLeftX,worldUpLeftY,worldWidth,worldHeight);  // initialize the part of the world to render
@@ -26,23 +27,25 @@ GraphicDisplayer::GraphicDisplayer() : QWidget()
     view->setTransform(scene2ViewMatrix);
     scene->addText(QString("Initialization ..."));
     view->show();                                                   // make the view window appears on the screen
-    //PRINTF(("view position = %d, %d\n",view->x(),view->y()));
+    qCDebug(GRinit,"view position = %d, %d\n",view->x(),view->y());
     //view->move(view->x()+200,view->y());
-    //PRINTF(("view position = %d, %d\n",view->x(),view->y()));
+    //qCDebug(GRinit,"view position = %d, %d",view->x(),view->y());
     printObject();
     //drawSomething();
     //printObject();
     grDispl = this;
+    qCInfo(GRinit,"terminating GraphicDisplayer constructor\n");
 }
 
 // *** Destructor
 GraphicDisplayer::~GraphicDisplayer()
 {
+    qCInfo(GRinit,"GraphicDisplayer destructor\n");
 }
 
 void GraphicDisplayer::printSceneDescription(void) const
 {
-    PRINTF((">   Scene Rectangle = (%f, %f, %f, %f)\n",sceneRectangle.x(),sceneRectangle.y(),sceneRectangle.width(),sceneRectangle.height()));
+    qCDebug(GRupd,">   Scene Rectangle = (%f, %f, %f, %f)\n",sceneRectangle.x(),sceneRectangle.y(),sceneRectangle.width(),sceneRectangle.height());
     const std::type_info &typGroupItem = typeid(QGraphicsItemGroup);
     QGraphicsItem *item = 0;
     QGraphicsItem *parentItem = 0;
@@ -56,9 +59,9 @@ void GraphicDisplayer::printSceneDescription(void) const
             QList <QGraphicsItem *> subItemList = item->childItems();
             const std::type_info &t = typeid(*item);
             if (t == typGroupItem)
-                PRINTF(("    scene \"group\" item %02d (0x%p) contains %02d items\n",nbTopLevelItems,item,subItemList.size()));
+                qCDebug(GRupd,"    scene \"group\" item %02d (0x%p) contains %02d items\n",nbTopLevelItems,item,subItemList.size());
             else
-                PRINTF(("    scene \"other\" item %02d (0x%p) contains %02d items\n",nbTopLevelItems,item,subItemList.size()));
+                qCDebug(GRupd,"    scene \"other\" item %02d (0x%p) contains %02d items\n",nbTopLevelItems,item,subItemList.size());
             ++nbTopLevelItems;
         }
     }
@@ -67,26 +70,26 @@ void GraphicDisplayer::printSceneDescription(void) const
 
 void GraphicDisplayer::printObject(void) const
 {
-    PRINTF((">>> GraphicDisplayer:\n"));
+    qCDebug(GRupd,">>> GraphicDisplayer:\n");
     printSceneDescription();
-    PRINTF(("                    |%+4.1f, %+4.1f, %+4.1f|\n",scene2ViewMatrix.m11(),scene2ViewMatrix.m12(),0.0));
-    PRINTF((">   desiredMatrix = |%+4.1f, %+4.1f, %+4.1f|\n",scene2ViewMatrix.m21(),scene2ViewMatrix.m22(),0.0));
-    PRINTF(("                    |%+4.1f, %+4.1f, %+4.1f|\n\n",scene2ViewMatrix.dx(),scene2ViewMatrix.dy(),1.0));
+    qCDebug(GRupd,"                    |%+4.1f, %+4.1f, %+4.1f|\n",scene2ViewMatrix.m11(),scene2ViewMatrix.m12(),0.0);
+    qCDebug(GRupd,">   desiredMatrix = |%+4.1f, %+4.1f, %+4.1f|\n",scene2ViewMatrix.m21(),scene2ViewMatrix.m22(),0.0);
+    qCDebug(GRupd,"                    |%+4.1f, %+4.1f, %+4.1f|\n\n",scene2ViewMatrix.dx(),scene2ViewMatrix.dy(),1.0);
     QTransform gotMatrix = view->transform();
-    PRINTF(("                    |%+4.1f, %+4.1f, %+4.1f|\n",gotMatrix.m11(),gotMatrix.m12(),gotMatrix.m13()));
-    PRINTF((">   realMatrix =    |%+4.1f, %+4.1f, %+4.1f|\n",gotMatrix.m21(),gotMatrix.m22(),gotMatrix.m23()));
-    PRINTF(("                    |%+4.1f, %+4.1f, %+4.1f|\n\n",gotMatrix.m31(),gotMatrix.m32(),gotMatrix.m33()));
+    qCDebug(GRupd,"                    |%+4.1f, %+4.1f, %+4.1f|\n",gotMatrix.m11(),gotMatrix.m12(),gotMatrix.m13());
+    qCDebug(GRupd,">   realMatrix =    |%+4.1f, %+4.1f, %+4.1f|\n",gotMatrix.m21(),gotMatrix.m22(),gotMatrix.m23());
+    qCDebug(GRupd,"                    |%+4.1f, %+4.1f, %+4.1f|\n\n",gotMatrix.m31(),gotMatrix.m32(),gotMatrix.m33());
     gotMatrix = view->viewportTransform();
-    PRINTF(("                    |%+4.1f, %+4.1f, %+4.1f|\n",gotMatrix.m11(),gotMatrix.m12(),gotMatrix.m13()));
-    PRINTF((">   viewportMatrix =|%+4.1f, %+4.1f, %+4.1f|\n",gotMatrix.m21(),gotMatrix.m22(),gotMatrix.m23()));
-    PRINTF(("                    |%+4.1f, %+4.1f, %+4.1f|\n",gotMatrix.m31(),gotMatrix.m32(),gotMatrix.m33()));
+    qCDebug(GRupd,"                    |%+4.1f, %+4.1f, %+4.1f|\n",gotMatrix.m11(),gotMatrix.m12(),gotMatrix.m13());
+    qCDebug(GRupd,">   viewportMatrix =|%+4.1f, %+4.1f, %+4.1f|\n",gotMatrix.m21(),gotMatrix.m22(),gotMatrix.m23());
+    qCDebug(GRupd,"                    |%+4.1f, %+4.1f, %+4.1f|\n",gotMatrix.m31(),gotMatrix.m32(),gotMatrix.m33());
 
 }
 
 // *** update GraphicDisplayer after end user resize of rendering window
 void GraphicDisplayer::resizeEvent(QResizeEvent *event)
 {
-    PRINTF(("GraphicDisplayer::resizeEvent of type %d\n", event->type()));
+    qCInfo(GRupd,"GraphicDisplayer::resizeEvent of type %d\n", event->type());
     updateSceneRectangle();                                             // recompute the scene rectangle
     updateScene2ViewMatrix();                                           // recompute the projection matrix
     printObject();
@@ -95,7 +98,7 @@ void GraphicDisplayer::resizeEvent(QResizeEvent *event)
 // *** update the scene reactangle (part of the world ro render) after end user resize of rendering window
 void GraphicDisplayer::updateSceneRectangle(void)
 {
-    PRINTF(("GraphicDisplayer::updateSceneRectangle\n"));
+    qCDebug(GRupd,"GraphicDisplayer::updateSceneRectangle\n");
     qreal initialRatio = (qreal)(worldWidth / worldHeight);
     qreal ratio = (qreal) (view->width()/view->height());
     qreal invRatio = (qreal) (view->height()/view->width());
@@ -116,7 +119,7 @@ void GraphicDisplayer::updateSceneRectangle(void)
 // *** update the projection matrix after end user resize of rendering window
 void GraphicDisplayer::updateScene2ViewMatrix(void)
 {
-    PRINTF(("GraphicDisplayer::updateScene2ViewMatrix\n"));
+    qCDebug(GRupd,"GraphicDisplayer::updateScene2ViewMatrix\n");
     qreal m11,m22,dx,dy;
     m11 = (qreal)(viewZoomScene);
     m22 = (qreal)(viewZoomScene);
@@ -128,30 +131,35 @@ void GraphicDisplayer::updateScene2ViewMatrix(void)
 // *** remove all items from the scene
 void GraphicDisplayer::cleanScene(void)
 {
+    qCInfo(GRscn,"entering GraphicDisplayer::cleanScene\n");
     QList <QGraphicsItem *> itemList = scene->items();
-    PRINTF(("scene has %d items before cleaning\n",itemList.size()));
+    qCDebug(GRscn,"scene has %d items before cleaning\n",itemList.size());
     for (int i = 0; i < itemList.size(); i++) {
+        qCDebug(GRscn,"removing item %d (0x%p)\n",i,itemList.at(i));
         scene->removeItem(itemList.at(i));
     }
     itemList = scene->items();
-    PRINTF(("scene has %d items after cleaning\n",itemList.size()));
+    qCDebug(GRscn,"scene has %d items after cleaning\n",itemList.size());
+    qCInfo(GRscn,"terminating GraphicDisplayer::cleanScene\n");
 }
 
 // *** remove 1 item from the scene
 void GraphicDisplayer::removeItemFromScene(QGraphicsItem *item)
 {
+    qCInfo(GRscn,"GraphicDisplayer::removeItemFromScene(0x%p)\n",item);
     scene->removeItem(item);
 }
 
 // *** add 1 item to the scene (on top)
 void GraphicDisplayer::addItemToScene(QGraphicsItem *item)
 {
+    qCInfo(GRscn,"GraphicDisplayer::addItemToScene(0x%p)\n",item);
     scene->addItem(item);
 }
 
 void GraphicDisplayer::update(void)
 {
-    PRINTF(("GraphicDisplayer::update\n"));
+    qCDebug(GRupd,"GraphicDisplayer::update\n");
     scene->update();
     printSceneDescription();
     view->update();
@@ -162,7 +170,7 @@ void GraphicDisplayer::drawSomething(void)
 {
     QPointF scenePoint;
     QPoint viewPoint;
-    PRINTF(("draw a red circle\n"));
+    qCDebug(GRscn,"draw a red ellipse\n");
     //QGraphicsEllipseItem something(-1.0, 1.0, 2.0, 2.0);
     QGraphicsEllipseItem *something= new QGraphicsEllipseItem(-360, -270, 720, 540);
     something->resetTransform();
@@ -170,13 +178,13 @@ void GraphicDisplayer::drawSomething(void)
     something->setPen(QPen(Qt::NoPen));
     scene->addItem(something);
     scenePoint.setX(-4); scenePoint.setY(-3); viewPoint = view->mapFromScene(scenePoint);
-    PRINTF(("scene (%+3.1f,%+3.1f) -> view (%3d,%3d)\n", scenePoint.x(), scenePoint.y(), viewPoint.x(), viewPoint.y()));
+    qCDebug(GRscn,"scene (%+3.1f,%+3.1f) -> view (%3d,%3d)\n", scenePoint.x(), scenePoint.y(), viewPoint.x(), viewPoint.y());
     scenePoint.setX(-4); scenePoint.setY(+3); viewPoint = view->mapFromScene(scenePoint);
-    PRINTF(("scene (%+3.1f,%+3.1f) -> view (%3d,%3d)\n", scenePoint.x(), scenePoint.y(), viewPoint.x(), viewPoint.y()));
+    qCDebug(GRscn,"scene (%+3.1f,%+3.1f) -> view (%3d,%3d)\n", scenePoint.x(), scenePoint.y(), viewPoint.x(), viewPoint.y());
     scenePoint.setX(4); scenePoint.setY(+3); viewPoint = view->mapFromScene(scenePoint);
-    PRINTF(("scene (%+3.1f,%+3.1f) -> view (%3d,%3d)\n", scenePoint.x(), scenePoint.y(), viewPoint.x(), viewPoint.y()));
+    qCDebug(GRscn,"scene (%+3.1f,%+3.1f) -> view (%3d,%3d)\n", scenePoint.x(), scenePoint.y(), viewPoint.x(), viewPoint.y());
     scenePoint.setX(4); scenePoint.setY(-3); viewPoint = view->mapFromScene(scenePoint);
-    PRINTF(("scene (%+3.1f,%+3.1f) -> view (%3d,%3d)\n", scenePoint.x(), scenePoint.y(), viewPoint.x(), viewPoint.y()));
+    qCDebug(GRscn,"scene (%+3.1f,%+3.1f) -> view (%3d,%3d)\n", scenePoint.x(), scenePoint.y(), viewPoint.x(), viewPoint.y());
     //scene->update();
     //view->update();
 }

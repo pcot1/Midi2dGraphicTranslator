@@ -22,11 +22,6 @@
 #include <string>
 #include <vector>
 
-#ifdef DEBUG
-#define PRINTF(args)    printf args
-#else
-#define PRINTF(args)
-#endif
                                                 // No MidiSource selected
 const int undefinedMidiSource = -1;
                                                 // siez of small buttons (rendering order)

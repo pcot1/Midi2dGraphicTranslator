@@ -1,6 +1,7 @@
 #ifndef MIDIVENTCONSUMER_H
 #define MIDIVENTCONSUMER_H
 #include <stdio.h>
+#include "logging.h"
 #include "midivent.h"
 
 class MidiventConsumer

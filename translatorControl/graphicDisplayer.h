@@ -1,6 +1,7 @@
 #ifndef GRAPHICDISPLAYER_H
 #define GRAPHICDISPLAYER_H
 #include <stdio.h>
+#include "logging.h"
 #include <typeinfo>
 #include <Qt>
 #include <QWidget>
@@ -10,12 +11,6 @@
 #include <QGraphicsView>
 #include <QResizeEvent>
 #include "world.h"
-
-#ifdef DEBUG
-#define PRINTF(args)    printf args
-#else
-#define PRINTF(args)
-#endif
 
 const int viewZoomScene = 1.0;
 const int initialViewportWidth  = (int)(viewZoomScene*worldWidth);

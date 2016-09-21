@@ -1,6 +1,7 @@
 #ifndef MIDISOURCE_H
 #define MIDISOURCE_H
 #include <stdio.h>
+#include "logging.h"
 #include <vector>
 #include "midivent.h"
 #include "midiventConsumer.h"
@@ -20,11 +21,6 @@
 #include "midiGraphicTranslator.h"
 
 
-#ifdef DEBUG
-#define PRINTF(args)    printf args
-#else
-#define PRINTF(args)
-#endif
 
 const int nbMaxConsumers = 32;
 

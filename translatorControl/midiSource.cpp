@@ -74,7 +74,7 @@ MidiSource::~MidiSource()
 // *** Private Slot: changingMidiPort
 void MidiSource::changingMidiPort(int newMidiPortId)
 {
-    PRINTF(("changingMidiPort of instance %d: (%d -> %d ) \n",instanceId,midiPortId,newMidiPortId));
+    qCDebug(GUmsu,"changingMidiPort of instance %d: (%d -> %d ) \n",instanceId,midiPortId,newMidiPortId);
     emit myMidiPortHasChanged(midiPortId,newMidiPortId);
     midiPortId = newMidiPortId;
 }
@@ -91,18 +91,18 @@ void  MidiSource::receiveMidiMessage(std::vector<unsigned char> *message)
     int size = message->size();
     int channel = 0x0;
     unsigned char status = message->at(0);
-    PRINTF(("recieving Midi Message %p = (%x,...)\n",message,status));
-    PRINTF(("status & 0b10000000 = %x\n",(status & ((unsigned char)(0b10000000)))));
-    PRINTF(("status & 0b10010000 = %x\n",(status & ((unsigned char)(0b10010000)))));
+    qCDebug(Mmsg,"recieving Midi Message %p = (%x,...)\n",message,status);
+    qCDebug(Mmsg,"status & 0b10000000 = %x\n",(status & ((unsigned char)(0b10000000))));
+    qCDebug(Mmsg,"status & 0b10010000 = %x\n",(status & ((unsigned char)(0b10010000))));
 
     // midi message format checks
     if (size < 3)
         return;                                                         // a "note" midi message is at least 1 byte status + 2 byte data
     unsigned char data1 = message->at(1);
     unsigned char data2 = message->at(2);
-    PRINTF(("transforming Midi Message %p = (%x,%d,%d) in Midivent\n",message,status,data1,data2));
-    PRINTF(("data1 & 0b10000000 = %x\n",(message->at(1) & ((unsigned char)(0b10000000)))));
-    PRINTF(("data2 & 0b10000000 = %x\n",(message->at(2) & ((unsigned char)(0b10000000)))));
+    qCDebug(Mmsg,"transforming Midi Message %p = (%x,%d,%d) in Midivent\n",message,status,data1,data2);
+    qCDebug(Mmsg,"data1 & 0b10000000 = %x\n",(message->at(1) & ((unsigned char)(0b10000000))));
+    qCDebug(Mmsg,"data2 & 0b10000000 = %x\n",(message->at(2) & ((unsigned char)(0b10000000))));
     if (! (status & ((unsigned char)(0b10000000))) )
         return;                                                         // first byte should be a "status" byte => 1st bit is 1
     if ( ((status & (unsigned char)(0b10000000)) != status) && ((status & (unsigned char)(0b10010000)) != status) )
@@ -142,12 +142,12 @@ void  MidiSource::receiveMidiMessage(std::vector<unsigned char> *message)
     if (nbConsumers <= 0)
         return;                                                         // nothing to forward is no consumers
                                                                     // forwarding Midi event in a Midivent object to consumers
-    PRINTF(("just before sending Midivent to %1d comsumers (toBeSent = %s)\n",nbConsumers,(toBeSent?"true":"false")));
+    qCDebug(Mvent,"just before sending Midivent to %1d comsumers (toBeSent = %s)\n",nbConsumers,(toBeSent?"true":"false"));
     if (toBeSent) {
         Midivent fevt(evtyp,data1);
         //MidiGraphicTranslator *p = 0;
         for (int i = 0; i < nbConsumers; i++) {
-            PRINTF(("calling receiveMidivent of Consumer #%02d (0x%p) with ", internalId2displayId(i),consumers[i]));
+            qCDebug(Mvent,"calling receiveMidivent of Consumer #%02d (0x%p) with ", internalId2displayId(i),consumers[i]);
             fevt.printObject();
             //p = (MidiGraphicTranslator *)(consumers[i]);
             //PRINTF(("Consumer considered as MidiGraphicTranslator is  0x%p \n", p));
@@ -182,18 +182,18 @@ MidiventConsumer *MidiSource::getConsumer(int i) const
 
 int  MidiSource::addConsumer(MidiventConsumer *newConsumer)
 {
-    PRINTF(("addConsumer(%p) nbConsumers of instance %d was %d\n",newConsumer,instanceId,nbConsumers));
+    qCDebug(Minit,"addConsumer(%p) nbConsumers of instance %d was %d\n",newConsumer,instanceId,nbConsumers);
     if (nbConsumers >= nbMaxConsumers)
            return(1);
     consumers[nbConsumers] = newConsumer;
     ++nbConsumers;
-    PRINTF(("nbConsumers of %d is %d\n",instanceId,nbConsumers));
+    qCDebug(Minit,"nbConsumers of %d is %d\n",instanceId,nbConsumers);
     return(0);
 }
 
 int  MidiSource::removeConsumer(MidiventConsumer *oldConsumer)
 {
-    PRINTF(("removeConsumer(%p), nbConsumers of %d was %d\n",oldConsumer,instanceId,nbConsumers));
+    qCDebug(Minit,"removeConsumer(%p), nbConsumers of %d was %d\n",oldConsumer,instanceId,nbConsumers);
     bool NotFound = true;
     int idToRemove = nbConsumers;
     for (int i = 0; i < nbConsumers; i++)
@@ -202,7 +202,7 @@ int  MidiSource::removeConsumer(MidiventConsumer *oldConsumer)
             NotFound = false;
             break;
         }
-    PRINTF(("oldConsumer notFound = %s, idToremove = %d\n",(NotFound ? "true" : "false"),idToRemove));
+    qCDebug(Minit,"oldConsumer notFound = %s, idToremove = %d\n",(NotFound ? "true" : "false"),idToRemove);
     if (NotFound)
         return(1);
 
@@ -210,6 +210,6 @@ int  MidiSource::removeConsumer(MidiventConsumer *oldConsumer)
         consumers[i] = consumers[i+1];
     consumers[nbConsumers-1] = 0;
     --nbConsumers;
-    PRINTF(("nbConsumers of %d is %d\n",instanceId,nbConsumers));
+    qCDebug(Minit,"nbConsumers of %d is %d\n",instanceId,nbConsumers);
     return(0);
 }

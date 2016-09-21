@@ -1,13 +1,8 @@
 #ifndef MIDIPORTCONSUMERS_H
 #define MIDIPORTCONSUMERS_H
 #include <stdio.h>
+#include "logging.h"
 #include "midiSource.h"
-
-#ifdef DEBUG
-#define PRINTF(args)    printf args
-#else
-#define PRINTF(args)
-#endif
 
 const int nbMaxMidiPortConsumers = 16;
 
@@ -22,14 +17,14 @@ class MidiPortConsumers
 public:
     MidiPortConsumers();
     ~MidiPortConsumers();
-    int getNbMidiPortConsumers(void);                     // accessor
-    MidiSource *getMidiPortConsumer(int index);           // accessor
-    void removeAllMidiPortConsumers(void);                // empty list
+    int getNbMidiPortConsumers(void);                       // accessor
+    MidiSource *getMidiPortConsumer(int index);             // accessor
+    void removeAllMidiPortConsumers(void);                  // empty list
     void addConsumer(MidiSource * consumer);                // add a Midi port consumer to the list
     void printObject(void) const;                           // debug
 private :
-    int nbMidiPortConsumers;                              // nb of the Midi port consumers in the list
-    MidiSource *midiPortConsumers[nbMaxMidiPortConsumers];  // list of the Midi Port consumer
+    int nbConsumers;                                        // nb of the Midi port consumers in the list
+    MidiSource *consumers[nbMaxMidiPortConsumers];          // list of the Midi Port consumers
 };
 
 #endif // MIDIPORTCONSUMERS_H
