@@ -5,6 +5,7 @@
 #include <vector>
 #include <QStringList>
 #include <QMessageBox>
+#include <QTimer>
 #include "RtMidi.h"
 #include "midiPortConsumers.h"
 #include "midiSource.h"
@@ -30,13 +31,15 @@ public:
 
     RtMidiPorts();                                    // constructor discovers existing Midi ports
     ~RtMidiPorts();
+    void setWindowMessage(QString &msg);                 // replace the window message
     int getNbRtMidiPorts(void);                       // accessor
     QStringList *getRtMidiPortsNames(void);           // accessor
     MidiPortConsumers *getConsumersOfMidiPortIndex(int id);   // accessor
     void printObject(void) const;                       // debug
     Q_INVOKABLE void receiveMidiMessage(MidiMessage message, int portIndex);
-    //Q_INVOKABLE void receiveMidiMessage(void);
-
+public slots:
+    void showWindow(void);                              // show the QLabel window
+    void hideWindow(void);                              // hide the QLabel window
 private:
                                                         // should be used before instrance intialized
     static int scanRtMidiPortsNames(QWidget *widget, RtMidiIn *pRtMidiPort, QStringList &existingMidiPortsNames);

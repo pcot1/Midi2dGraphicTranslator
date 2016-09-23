@@ -7,8 +7,10 @@
 #include <QWidget>
 #include <QGraphicsItem>
 #include <QGraphicsItemGroup>
+#include <QGraphicsTextItem>
 #include <QGraphicsScene>
 #include <QGraphicsView>
+#include <QTimer>
 #include <QResizeEvent>
 #include "world.h"
 
@@ -31,12 +33,15 @@ class GraphicDisplayer : public QWidget
 public:
     GraphicDisplayer();
     ~GraphicDisplayer();
-    void cleanScene(void);                                  // empty the scene
+    void emptyScene(void);                                  // empty the scene
     void removeItemFromScene(QGraphicsItem *item);          // remove an item from the scene
     void addItemToScene(QGraphicsItem *item);               // add an item to the scene (on top)
     void printObject(void) const;                           // debug
     void update(void);
     void drawSomething(void);                               // draw something on the screen for debug
+
+public slots:
+    void cleanScene(void);
 
 protected:
     void resizeEvent(QResizeEvent *event);                  // process user action of resizing the rendering window

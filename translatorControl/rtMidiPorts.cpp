@@ -15,10 +15,10 @@ int  RtMidiPorts::scanRtMidiPortsNames(QWidget *widget, RtMidiIn *pRtMidiPort, Q
 //int  RtMidiPorts::scanRtMidiPortsNames(RtMidiIn *pRtMidiPort, QStringList &existingMidiPortsNames)
 {
     unsigned int nbMidiPorts;
-    qCDebug(Minit,"entering scanRtMidiPortsNames(0x%p)\n",pRtMidiPort);
+    qCDebug(Minit,"entering scanRtMidiPortsNames(%p)\n",pRtMidiPort);
     qCInfo(Minit,"Scan Midi Port names\n");
     qCDebug(Minit,"Registering MetaType \"MidiMessage\" for future usage by QMetaObject::invokeMethod\n");
-    qRegisterMetaType<MidiMessage>("MidiMessage\n");
+    qRegisterMetaType<MidiMessage>("MidiMessage");
 
     try {
         nbMidiPorts = pRtMidiPort->getPortCount();
@@ -53,11 +53,15 @@ void  RtMidiPorts::rtMidiCallBack(double deltatime, std::vector<unsigned char> *
 }
 
 // *** Constructor
-RtMidiPorts::RtMidiPorts() : QLabel("discovering Midi Ports ...")
+RtMidiPorts::RtMidiPorts() : QLabel("  discovering Midi Ports ...")
 {
     qCDebug(Minit,"entering RtMidiPorts constructor\n");
     theRtMidiPortsManager = this;                                   // now a rtMidiPortsManager does exist !
-    qCDebug(Minit,"centralized RtMidiPortsManager exists and is 0x%p\n",this);
+    qCDebug(Minit,"centralized RtMidiPortsManager exists and is %p\n",this);
+
+    setFixedSize(400,60);
+    setFont(QFont("Staccato222 BT",30));
+    move(0,0);
     this->show();
                                                                     // first, there is nothing
     for (int i = 0; i < nbMaxRtMidiPorts; i++) {
@@ -76,7 +80,7 @@ RtMidiPorts::RtMidiPorts() : QLabel("discovering Midi Ports ...")
     }
 
                                                                     // discovers the exiting Input Midi Ports
-    qCDebug(Minit,"use rtMidiInPorts[0] 0x%p to scan existing Midi In Ports\n",rtMidiPorts[0]);
+    qCDebug(Minit,"use rtMidiInPorts[0] %p to scan existing Midi In Ports\n",rtMidiPorts[0]);
     int nbExistingMidiPorts = scanRtMidiPortsNames(this,rtMidiPorts[0],rtMidiPortsNames);
     //int nbExistingMidiPorts = scanRtMidiPortsNames(rtMidiPorts[0],rtMidiPortsNames);
     qCDebug(Minit,"Found %d Midi In Ports\n",nbExistingMidiPorts);
@@ -100,6 +104,11 @@ RtMidiPorts::RtMidiPorts() : QLabel("discovering Midi Ports ...")
                                                                     // open RtMidi ports and set callback
     qCDebug(Minit,"calling \"startUseOfRtMidiPorts\" to make these rtMidiPorts usable\n");
     startUseOfRtMidiPorts();
+
+    //QTimer *timer = new QTimer(this);
+    //QObject::connect(timer, SIGNAL(timeout()), this, SLOT(hideWindow()));
+    //timer->start(3000);
+    QTimer::singleShot(3000,this, SLOT(hideWindow()));
     qCDebug(Minit,"terminating RtMidiPorts constructor\n");
 }
 
@@ -109,6 +118,27 @@ RtMidiPorts::~RtMidiPorts()
     qCDebug(Minit,"RtMidiPorts destructor\n");
     for (int i = 0; i < nbRtMidiPorts; i++)
          rtMidiPorts[i] = 0;
+}
+
+// *** change the window message
+void RtMidiPorts::setWindowMessage(QString &msg)
+{
+    qCDebug(Minit,"RtMidiPorts::setWindowMessage \"%s\"\n",qPrintable(msg));
+    setText(msg);
+}
+
+// *** public slot show the rtMidiPorts window
+void RtMidiPorts::showWindow(void)
+{
+    qCDebug(Minit,"RtMidiPorts::showWindow\n");
+    show();
+}
+
+// *** public slot hide the rtMidiPorts window
+void RtMidiPorts::hideWindow(void)
+{
+    qCDebug(Minit,"RtMidiPorts::hideWindow\n");
+    hide();
 }
 
 // *** private: open existing RtMidiIn and set callback

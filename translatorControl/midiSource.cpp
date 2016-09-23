@@ -147,10 +147,10 @@ void  MidiSource::receiveMidiMessage(std::vector<unsigned char> *message)
         Midivent fevt(evtyp,data1);
         //MidiGraphicTranslator *p = 0;
         for (int i = 0; i < nbConsumers; i++) {
-            qCDebug(Mvent,"calling receiveMidivent of Consumer #%02d (0x%p) with ", internalId2displayId(i),consumers[i]);
+            qCDebug(Mvent,"calling receiveMidivent of Consumer #%02d (%p) with ", internalId2displayId(i),consumers[i]);
             fevt.printObject();
             //p = (MidiGraphicTranslator *)(consumers[i]);
-            //PRINTF(("Consumer considered as MidiGraphicTranslator is  0x%p \n", p));
+            //PRINTF(("Consumer considered as MidiGraphicTranslator is  %p \n", p));
             //p->receiveMidivent(&fevt);
             consumers[i]->printObject();
             consumers[i]->receiveMidivent(&fevt);

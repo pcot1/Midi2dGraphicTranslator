@@ -60,13 +60,17 @@ signals:
     void registerMidiSource(int);                   // signal to gui to select MidiSource
     void unRegisterMidiSource(int);                 // signal to gui to deselect MidiSource
 protected:
-    QPointF generateRandomWorldCoordinates(void) const; // utils
-    void updateListOfMidiSourcesInComboBox(int nbMS);   // private to update MidiSource ComboBox
+    QPointF generateRandomWorldCoordinates(void) const;     // utils
+    void updateListOfMidiSourcesInComboBox(int nbMS);       // private to update MidiSource ComboBox
+    void *getNoteThing(unsigned char noteId) const;         // get the thing of the given note
+    void setNoteThing(unsigned char noteId, void *thing);   // set the note thing of the given note
 private:
     static int nbCreated;                           // nb of already created translators
     int instanceId;                                 // id of this translator
     int MidiSourceId;                               // current MidiSource (None = -1)
-    unsigned int nbMidiRecievedNoteOn;              // current Midi activity
+    int nbMidiRecievedNoteOn;                       // current Midi activity
+    void *noteThing[128];                           // pointer when note is pressed
+
                                                 // Gui part
     QLineEdit *MidiGraphicTranslatorName;           // header : name
     QPushButton *quit_Button;                       // header : delete Translator

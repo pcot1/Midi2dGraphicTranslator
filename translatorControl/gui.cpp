@@ -76,7 +76,7 @@ Gui::Gui(RtMidiPorts *theRtMidiInPortsManager) : QWidget()
     translatorRenderingOrder[2] = 2;
     (MidiGraphicTranslators[2])->setFixedWidth(widthLayoutActiveCell);
     nbMidiGraphicTranslators = 3;
-                                                                    // Gui final layout
+                                                                     // Gui final layout
     layout = new QGridLayout;
     layout->setSizeConstraint(QLayout::SetFixedSize);
     MidiSourcesFirstRow = 0;
@@ -91,7 +91,7 @@ Gui::Gui(RtMidiPorts *theRtMidiInPortsManager) : QWidget()
     setLayout(layout);
                                                                     // Expose Gui window
     this->show();
-    this->move(0,0);
+    this->move(0,100);
     qCInfo(GUinit,"terminating Gui constructor\n");
 }
 
@@ -108,8 +108,8 @@ void Gui::printObject(void) const
     qCDebug(GUupd,">   nbMidiSources = %2d: first row = %1d, nb rows %1d\n",nbMidiSources,MidiSourcesFirstRow,MidiSourcesNbRows);
     qCDebug(GUupd,"    MidiSources = ");
     for (int i = 0; i < nbMidiSources-1; i++)
-            qCDebug(GUupd,"0x%p, ",(void *)MidiSources[i]);
-    qCDebug(GUupd,"0x%p\n",(void *)MidiSources[nbMidiSources-1]);
+            qCDebug(GUupd,"%p, ",(void *)MidiSources[i]);
+    qCDebug(GUupd,"%p\n",(void *)MidiSources[nbMidiSources-1]);
     qCDebug(GUupd,"    nbConsumers of each MidiSource = ");
     for (int i = 0; i < nbMidiSources-1; i++)
             qCDebug(GUupd,"%d, ",(MidiSources[i])->getNbConsumers());
@@ -118,8 +118,8 @@ void Gui::printObject(void) const
     qCDebug(GUupd,">   nbMidiGraphicTranslators = %2d, first row = %1d, nb rows %1d\n",nbMidiGraphicTranslators,MidiGraphicTranslatorsFirstRow,MidiGraphicTranslatorsNbRows);
     qCDebug(GUupd,"    MidiGraphicTranslators = ");
     for (int i = 0; i < nbMidiGraphicTranslators-1; i++)
-            qCDebug(GUupd,"0x%p, ",(void *)MidiGraphicTranslators[i]);
-    qCDebug(GUupd,"0x%p\n",(void *)MidiGraphicTranslators[nbMidiGraphicTranslators-1]);
+            qCDebug(GUupd,"%p, ",(void *)MidiGraphicTranslators[i]);
+    qCDebug(GUupd,"%p\n",(void *)MidiGraphicTranslators[nbMidiGraphicTranslators-1]);
     qCDebug(GUupd,"    translatorInstanceIds = ");
     for (int i = 0; i < nbMidiGraphicTranslators-1; i++)
             qCDebug(GUupd,"%2d, ",translatorInstanceIds[i]);
@@ -318,7 +318,7 @@ void Gui::moveMidiGraphicTranslators(int iId, int mvt)
 {
     qCInfo(GUupd,"entering Gui::moveMidiGraphicTranslators(%2d,%d)\n",iId,mvt);
     printObject();
-    gDispl->cleanScene();
+    gDispl->emptyScene();
     removeWidgetsFromGuiLayout();
 
     int guiId = 0;                                              // find guiId
@@ -364,8 +364,8 @@ void Gui::addConsumerRequest(int MidiSourceId)
 {
     qCInfo(GUupd,"Gui::addConsumerRequest(%1d)\n",MidiSourceId);
     MidiventConsumer *MC = dynamic_cast<MidiventConsumer *>(QObject::sender());
-    qCDebug(GUupd,"addConsumerRequest for MidiSource %d concerning sender QObject 0x%p seen as MidiConsumer 0x%p\n",MidiSourceId,QObject::sender(),MC);
-    qCDebug(GUupd,"MidiSource #%02d will sent Midivent to MidiConsumer 0x%p\n",internalId2displayId(MidiSourceId),MC);
+    qCDebug(GUupd,"addConsumerRequest for MidiSource %d concerning sender QObject %p seen as MidiConsumer %p\n",MidiSourceId,QObject::sender(),MC);
+    qCDebug(GUupd,"MidiSource #%02d will sent Midivent to MidiConsumer %p\n",internalId2displayId(MidiSourceId),MC);
     (MidiSources[MidiSourceId])->addConsumer(MC);
 }
 

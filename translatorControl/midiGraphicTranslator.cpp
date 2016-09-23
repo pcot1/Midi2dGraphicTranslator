@@ -20,8 +20,13 @@ MidiGraphicTranslator::MidiGraphicTranslator(QWidget *pparent) : QGroupBox(ppare
     //char bla[128];
     instanceId=nbCreated;
     ++nbCreated;
+    nbMidiRecievedNoteOn = 0;
+    for (int i = 0; i < 128; i++)
+            noteThing[i] = 0;
+
+                                                                      // initialization of GUI part
     sprintf(bla,"Graphic Translator #%02d",internalId2displayId(instanceId));
-    setTitle(bla);                                                    //
+    setTitle(bla);                                                    // the widget title
                                                                       // Translator Name + Quit Button;
     sprintf(bla,"Translator #%02d",internalId2displayId(instanceId));
     MidiGraphicTranslatorName = new QLineEdit(bla);
@@ -78,14 +83,7 @@ MidiGraphicTranslator::MidiGraphicTranslator(QWidget *pparent) : QGroupBox(ppare
                                                                     // the layer of the graphic scene of this translator
     graphicLayer = new QGraphicsItemGroup();
     QList <QGraphicsItem *> itemList = graphicLayer->childItems();
-    qCDebug(GRgrp,"Translator #%02d (0x%p) groupItem 0x%p contient %d items \n",internalId2displayId(instanceId),this,graphicLayer,itemList.size());
-// Debug
-    /*
-    PRINTF(("Graphic Translator %d is %p\n",instanceId,this));
-    Midivent evt(NoteOn,64);
-    evt.printObject();
-    receiveMidivent(&evt);
-    */
+    qCDebug(GRgrp,"Translator #%02d (%p) groupItem %p contient %d items \n",internalId2displayId(instanceId),this,graphicLayer,itemList.size());
 }
 
 // *** Destructor
@@ -98,7 +96,7 @@ MidiGraphicTranslator::~MidiGraphicTranslator(void)
 
 void MidiGraphicTranslator::printObject(void) const
 {
-    qCDebug(GUtru,">>> printObject: MidiGraphicTranslator[%1d] showed as #%02d is 0x%p\n",instanceId,internalId2displayId(instanceId),this);
+    qCDebug(GUtru,">>> printObject: MidiGraphicTranslator[%1d] showed as #%02d is %p\n",instanceId,internalId2displayId(instanceId),this);
 }
 
 // *** accessor
@@ -191,6 +189,22 @@ QPointF MidiGraphicTranslator::generateRandomWorldCoordinates(void) const
     return(QPointF((qreal) (DX + (rand()%SX)) / zoomer,(qreal) (DY + (rand()%SY)) / zoomer));
 }
 
+// *** store the thing of a note
+void MidiGraphicTranslator::setNoteThing(unsigned char noteId, void *thing) {
+
+    qCDebug(GRgrp,"store %p in note %d\n",thing,noteId);
+    noteThing[noteId & (unsigned char)(0b01111111)] = thing;
+    return;
+}
+
+// *** retreive the thing of a note
+void *MidiGraphicTranslator::getNoteThing(unsigned char noteId) const {
+
+    qCDebug(GRgrp,"retrive thing of note %d = %p\n",noteId,noteThing[noteId & (unsigned char)(0b01111111)]);
+    return(noteThing[noteId & (unsigned char)(0b01111111)]);
+}
+
+
 // *** transform a Midivent in graphic action
 void MidiGraphicTranslator::receiveMidivent(Midivent *pevt)
 {
@@ -198,39 +212,63 @@ void MidiGraphicTranslator::receiveMidivent(Midivent *pevt)
     QGraphicsTextItem *pText = new  QGraphicsTextItem;
     QPointF where = generateRandomWorldCoordinates();
     QList <QGraphicsItem *> itemList;
+    QGraphicsItem *item = 0;
 
-    qCDebug(Mvent,"Translator #%02d (0x%p) receiving Midivent 0x%p\n", internalId2displayId(instanceId),this,pevt);
+    qCDebug(Mvent,"Translator #%02d (%p) receiving Midivent %p\n", internalId2displayId(instanceId),this,pevt);
     switch (pevt->getType())  {
         case None:
             qCDebug(Mvent,"Midivent is \"None\"\n"); break;
         case NoteOn:
-            qCDebug(Mvent,"Midivent is \"NoteOn %3d\"\n",pevt->getNote());
-            qCDebug(GRgrp,"update Translator graphic Layer 0x%p\n",graphicLayer);
-            grDispl->removeItemFromScene(graphicLayer);
-            qCDebug(GRgrp,"drawing text 0x%p in (%+3.1f,%+3.1f)\n",pText,where.x(),where.y());
-            sprintf(bla,"#%02d: (%+3.1f,%+3.1f)",instanceId,where.x(),where.y());
+            ++nbMidiRecievedNoteOn;
+            qCDebug(Mvent,"Midivent is \"NoteOn %3d\" (%d notes currently on)\n",pevt->getNote(),nbMidiRecievedNoteOn);
+            qCDebug(GRgrp,"update Translator graphic Layer %p\n",graphicLayer);
+            //grDispl->removeItemFromScene(graphicLayer);
+            qCDebug(GRgrp,"drawing text %p in (%+3.1f,%+3.1f)\n",pText,where.x(),where.y());
+            //sprintf(bla,"#%02d: (%+3.1f,%+3.1f)",instanceId,where.x(),where.y());
+            sprintf(bla,"#%02d",instanceId);
             pText->setPlainText(QString(bla));
             pText->setPos(where);
-            qCDebug(GRgrp,"add text 0x%p to group 0x%p\n",pText,graphicLayer);
+            qCDebug(GRgrp,"the graphicLayer scene is %p\n",graphicLayer->scene());
+            qCDebug(GRgrp,"add text %p to group %p\n",pText,graphicLayer);
             //grDispl->drawSomething();
             //grDispl->addItemInScene(pText);
             graphicLayer->addToGroup((QGraphicsItem *)(pText));
+            qCDebug(GRgrp,"the item scene is %p\n",pText->scene());
+            setNoteThing(pevt->getNote(),(void *)((QGraphicsItem *)(pText)));
             //graphicLayer->update();
             itemList = graphicLayer->childItems();
-            qCDebug(GRgrp,"groupItem 0x%p contient %d items\n",graphicLayer,itemList.size());
-            grDispl->addItemToScene(graphicLayer);
-            grDispl->update();
+            qCDebug(GRgrp,"TR #%02d (%p) graphicLayer %p has %d items\n",instanceId,this,graphicLayer,itemList.size());
+            //grDispl->addItemToScene(graphicLayer);
+            //grDispl->update();
             break;
         case NoteOff:
-            qCDebug(Mvent,"Midivent is \"NoteOff %3d\"\n",pevt->getNote());
-            itemList = graphicLayer->childItems();
-            qCDebug(GRgrp,"groupItem 0x%p contient %d items before \n",graphicLayer,itemList.size());
-            for (int i = 0; i < itemList.size(); i++) {
-                //graphicLayer->removeFromGroup(itemList.at(i));
-                (graphicLayer->scene())->removeItem(itemList.at(i));
+            --nbMidiRecievedNoteOn;
+            qCDebug(Mvent,"Midivent is \"NoteOff %3d\" (%d notes currently on)\n",pevt->getNote(),nbMidiRecievedNoteOn);
+            if (nbMidiRecievedNoteOn < 0)   {
+                nbMidiRecievedNoteOn = 0;
+                qCDebug(Mvent,"nb notes currently on corrected to %d)\n",nbMidiRecievedNoteOn);
             }
+            item = (QGraphicsItem *)(getNoteThing(pevt->getNote()));
+            if (item == 0)  {
+                qCWarning(GRgrp,"TR #%02d (%p) retrive NULL graphics item in noteThing for note %d\n",instanceId,this,pevt->getNote());
+                qCDebug(GRgrp,"TR #%02d decision to clean the whole graphicLayer %p\n",instanceId,this,graphicLayer);
+                itemList = graphicLayer->childItems();
+                qCDebug(GRgrp,"graphicLayer %p had %d items before \n",graphicLayer,itemList.size());
+                for (int i = 0; i < itemList.size(); i++) {
+                    //graphicLayer->removeFromGroup(itemList.at(i));
+                    (graphicLayer->scene())->removeItem(itemList.at(i));
+                }
+                itemList = graphicLayer->childItems();
+                qCDebug(GRgrp,"graphicLayer %p has now %d items after\n",graphicLayer,itemList.size());
+                return;
+            }
+            qCDebug(GRgrp,"the item scene is %p\n",item->scene());
+            qCDebug(GRgrp,"the graphicLayer scene is %p\n",graphicLayer->scene());
+            qCDebug(GRgrp,"TR #%02d (%p) remove item %p from graphicLayer %p\n",instanceId,this,item,graphicLayer);
+            setNoteThing(pevt->getNote(),0);
+            (graphicLayer->scene())->removeItem(item);
             itemList = graphicLayer->childItems();
-            qCDebug(GRgrp,"groupItem 0x%p contient %d items after\n",graphicLayer,itemList.size());
+            qCDebug(GRgrp,"graphicLayer %p has now %d items after\n",graphicLayer,itemList.size());
             break;
         default:
             qCDebug(Mvent,"unknown \"%d\", \"%d\"\n",pevt->getType(),pevt->getNote());

@@ -9,6 +9,7 @@ GraphicDisplayer::GraphicDisplayer() : QWidget()
     qCInfo(GRinit,"entering GraphicDisplayer constructor\n");
                                                                     // Scene
     scene = new QGraphicsScene;                                         // create Qt scene object
+    qCDebug(GRinit,"the scene is %p\n",scene);
     sceneRectangle = QRectF(worldUpLeftX,worldUpLeftY,worldWidth,worldHeight);  // initialize the part of the world to render
     //sceneRectangle = QRectF(-4,3,8,6);                                // initialize the part of the world to render
     scene->setBackgroundBrush(Qt::white);                               // background is white
@@ -25,7 +26,9 @@ GraphicDisplayer::GraphicDisplayer() : QWidget()
     //scene2ViewMatrix.setMatrix(100,0,0,0,-100,0,+400,+300,1);                      // initialize a default identity matrix
     updateScene2ViewMatrix();                                           // set the real matrix for default view window
     view->setTransform(scene2ViewMatrix);
-    scene->addText(QString("Initialization ..."));
+    QGraphicsTextItem *initialText = scene->addText(QStringLiteral("Initialization ..."),QFont("Impact",20));
+    initialText->setPos(-80,-50);
+    view->move(700,150);
     view->show();                                                   // make the view window appears on the screen
     qCDebug(GRinit,"view position = %d, %d\n",view->x(),view->y());
     //view->move(view->x()+200,view->y());
@@ -34,6 +37,11 @@ GraphicDisplayer::GraphicDisplayer() : QWidget()
     //drawSomething();
     //printObject();
     grDispl = this;
+
+    //QTimer *timer = new QTimer(this);
+    //QObject::connect(timer, SIGNAL(timeout()), this, SLOT(cleanScene()));
+    //timer->start(3000);
+    QTimer::singleShot(3000,this, SLOT(cleanScene()));
     qCInfo(GRinit,"terminating GraphicDisplayer constructor\n");
 }
 
@@ -45,7 +53,8 @@ GraphicDisplayer::~GraphicDisplayer()
 
 void GraphicDisplayer::printSceneDescription(void) const
 {
-    qCDebug(GRupd,">   Scene Rectangle = (%f, %f, %f, %f)\n",sceneRectangle.x(),sceneRectangle.y(),sceneRectangle.width(),sceneRectangle.height());
+    qCDebug(GRupd,">   Scene %p\n",scene);
+    qCDebug(GRupd,"    Scene Rectangle = (%f, %f, %f, %f)\n",sceneRectangle.x(),sceneRectangle.y(),sceneRectangle.width(),sceneRectangle.height());
     const std::type_info &typGroupItem = typeid(QGraphicsItemGroup);
     QGraphicsItem *item = 0;
     QGraphicsItem *parentItem = 0;
@@ -59,16 +68,16 @@ void GraphicDisplayer::printSceneDescription(void) const
             QList <QGraphicsItem *> subItemList = item->childItems();
             const std::type_info &t = typeid(*item);
             if (t == typGroupItem)
-                qCDebug(GRupd,"    scene \"group\" item %02d (0x%p) contains %02d items\n",nbTopLevelItems,item,subItemList.size());
+                qCDebug(GRupd,"    scene \"group\" item %02d (%p) contains %02d items\n",nbTopLevelItems,item,subItemList.size());
             else
-                qCDebug(GRupd,"    scene \"other\" item %02d (0x%p) contains %02d items\n",nbTopLevelItems,item,subItemList.size());
+                qCDebug(GRupd,"    scene \"other\" item %02d (%p) contains %02d items\n",nbTopLevelItems,item,subItemList.size());
             ++nbTopLevelItems;
         }
     }
     return;
 }
 
-void GraphicDisplayer::printObject(void) const
+void GraphicDisplayer::printObject() const
 {
     qCDebug(GRupd,">>> GraphicDisplayer:\n");
     printSceneDescription();
@@ -83,8 +92,30 @@ void GraphicDisplayer::printObject(void) const
     qCDebug(GRupd,"                    |%+4.1f, %+4.1f, %+4.1f|\n",gotMatrix.m11(),gotMatrix.m12(),gotMatrix.m13());
     qCDebug(GRupd,">   viewportMatrix =|%+4.1f, %+4.1f, %+4.1f|\n",gotMatrix.m21(),gotMatrix.m22(),gotMatrix.m23());
     qCDebug(GRupd,"                    |%+4.1f, %+4.1f, %+4.1f|\n",gotMatrix.m31(),gotMatrix.m32(),gotMatrix.m33());
-
 }
+
+// *** slot cleanScene: remove all non Translators item from scene
+void GraphicDisplayer::cleanScene(void)
+{
+    qCDebug(GRupd,"GraphicDisplayer::cleanScene\n");
+    const std::type_info &typGroupItem = typeid(QGraphicsItemGroup);
+    QGraphicsItem *item = 0;
+    QGraphicsItem *parentItem = 0;
+    QList <QGraphicsItem *> itemList = scene->items();
+    int nbItems = itemList.size();
+    for (int i = 0; i < nbItems; i++) {
+        item = itemList.at(i);
+        parentItem = item->parentItem();
+        if (parentItem == 0) {
+            const std::type_info &t = typeid(*item);
+            if (t != typGroupItem)  {
+                scene->removeItem(itemList.at(i));
+            }
+        }
+    }
+    return;
+}
+
 
 // *** update GraphicDisplayer after end user resize of rendering window
 void GraphicDisplayer::resizeEvent(QResizeEvent *event)
@@ -129,32 +160,34 @@ void GraphicDisplayer::updateScene2ViewMatrix(void)
 }
 
 // *** remove all items from the scene
-void GraphicDisplayer::cleanScene(void)
+void GraphicDisplayer::emptyScene(void)
 {
-    qCInfo(GRscn,"entering GraphicDisplayer::cleanScene\n");
+    qCInfo(GRscn,"entering GraphicDisplayer::emptyScene\n");
     QList <QGraphicsItem *> itemList = scene->items();
-    qCDebug(GRscn,"scene has %d items before cleaning\n",itemList.size());
+    qCDebug(GRscn,"scene has %d items before removing graphics items\n",itemList.size());
     for (int i = 0; i < itemList.size(); i++) {
-        qCDebug(GRscn,"removing item %d (0x%p)\n",i,itemList.at(i));
+        qCDebug(GRscn,"removing item %d (%p)\n",i,itemList.at(i));
         scene->removeItem(itemList.at(i));
     }
     itemList = scene->items();
-    qCDebug(GRscn,"scene has %d items after cleaning\n",itemList.size());
-    qCInfo(GRscn,"terminating GraphicDisplayer::cleanScene\n");
+    qCDebug(GRscn,"scene has %d items after removing graphics items\n",itemList.size());
+    qCInfo(GRscn,"terminating GraphicDisplayer::emptyScene\n");
 }
 
 // *** remove 1 item from the scene
 void GraphicDisplayer::removeItemFromScene(QGraphicsItem *item)
 {
-    qCInfo(GRscn,"GraphicDisplayer::removeItemFromScene(0x%p)\n",item);
+    qCInfo(GRscn,"GraphicDisplayer::removeItemFromScene(%p)\n",item);
     scene->removeItem(item);
+    printObject();
 }
 
 // *** add 1 item to the scene (on top)
 void GraphicDisplayer::addItemToScene(QGraphicsItem *item)
 {
-    qCInfo(GRscn,"GraphicDisplayer::addItemToScene(0x%p)\n",item);
+    qCInfo(GRscn,"GraphicDisplayer::addItemToScene(%p)\n",item);
     scene->addItem(item);
+    printObject();
 }
 
 void GraphicDisplayer::update(void)

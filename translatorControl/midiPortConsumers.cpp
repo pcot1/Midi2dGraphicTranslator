@@ -19,7 +19,7 @@ void MidiPortConsumers::printObject() const
      //       theLoggingCategory = Minit;
      qCDebug(Minit,"MidiPortConsumers %p has %1d consumers",this,nbConsumers);
      for (int i = 0; i < nbConsumers; i++)
-        qCDebug(Minit,"Midi Port Consumer (MidiSource) %1d is 0x%p\n",i,consumers[i]);
+        qCDebug(Minit,"Midi Port Consumer (MidiSource) %1d is %p\n",i,consumers[i]);
 
 }
 
@@ -45,7 +45,7 @@ void MidiPortConsumers::removeAllMidiPortConsumers(void)
 
 void MidiPortConsumers::addConsumer(MidiSource * consumer)
 {
-    qCDebug(Minit,"addConsumer 0x%p with MidiSource 0x%p",this,consumer);
+    qCDebug(Minit,"addConsumer %p with MidiSource %p",this,consumer);
     consumers[nbConsumers] = consumer;
     ++nbConsumers;
     printObject();
