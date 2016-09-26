@@ -62,17 +62,18 @@ Gui::Gui(RtMidiPorts *theRtMidiInPortsManager) : QWidget()
     nbMidiSources = 2;
     MidiGraphicTranslators[0] = new MidiGraphicTranslator(this);
     translatorInstanceIds[0] = (MidiGraphicTranslators[0])->getInstanceId();
-    gDispl->addItemToScene(MidiGraphicTranslators[0]->getGraphics());
+    gDispl->addItemToScene(MidiGraphicTranslators[0]->getTranslatorGraphicLayer());
     translatorRenderingOrder[0] = 0;
     (MidiGraphicTranslators[0])->setFixedWidth(widthLayoutActiveCell);
     MidiGraphicTranslators[1] = new MidiGraphicTranslator(this);
     translatorInstanceIds[1] = (MidiGraphicTranslators[1])->getInstanceId();
-    gDispl->addItemToScene(MidiGraphicTranslators[1]->getGraphics());
+    gDispl->addItemToScene(MidiGraphicTranslators[1]->getTranslatorGraphicLayer());
     translatorRenderingOrder[1] = 1;
     (MidiGraphicTranslators[1])->setFixedWidth(widthLayoutActiveCell);
-    MidiGraphicTranslators[2] = new MidiGraphicTranslator(this);
+    //MidiGraphicTranslators[2] = new MidiGraphicTranslator(this);
+    MidiGraphicTranslators[2] = new One2OneTranslator(this);
     translatorInstanceIds[2] = (MidiGraphicTranslators[2])->getInstanceId();
-    gDispl->addItemToScene(MidiGraphicTranslators[2]->getGraphics());
+    gDispl->addItemToScene(MidiGraphicTranslators[2]->getTranslatorGraphicLayer());
     translatorRenderingOrder[2] = 2;
     (MidiGraphicTranslators[2])->setFixedWidth(widthLayoutActiveCell);
     nbMidiGraphicTranslators = 3;
@@ -259,7 +260,7 @@ void Gui::addMidiGraphicTranslator(void)
     (MidiGraphicTranslators[nbMidiGraphicTranslators])->receiveNumberOfMidiSources(nbMidiSources);
     translatorInstanceIds[nbMidiGraphicTranslators] = (MidiGraphicTranslators[nbMidiGraphicTranslators])->getInstanceId();
     translatorRenderingOrder[nbMidiGraphicTranslators] = nbMidiGraphicTranslators;
-    gDispl->addItemToScene(MidiGraphicTranslators[nbMidiGraphicTranslators]->getGraphics());
+    gDispl->addItemToScene(MidiGraphicTranslators[nbMidiGraphicTranslators]->getTranslatorGraphicLayer());
     ++nbMidiGraphicTranslators;
     QString bla;    bla.sprintf("%2d Translators",nbMidiGraphicTranslators);
     nbMidiGraphicTranslators_Label->setText(bla);
@@ -272,7 +273,7 @@ void Gui::deleteMidiGraphicTranslator(int iId)
 {
     qCInfo(GUupd,"entering Gui::deleteMidiGraphicTranslator(%2d)\n",iId);
     printObject();
-    gDispl->removeItemFromScene(MidiGraphicTranslators[iId]->getGraphics());
+    gDispl->removeItemFromScene(MidiGraphicTranslators[iId]->getTranslatorGraphicLayer());
     removeWidgetsFromGuiLayout();
 
     int guiId = 0;                                              // re compact the translatorInstanceIds array
@@ -346,7 +347,7 @@ void Gui::moveMidiGraphicTranslators(int iId, int mvt)
     translatorRenderingOrder[destination] = guiId;
 
     for (int i = 0; i < nbMidiGraphicTranslators; i++)
-        gDispl->addItemToScene(MidiGraphicTranslators[translatorRenderingOrder[i]]->getGraphics());
+        gDispl->addItemToScene(MidiGraphicTranslators[translatorRenderingOrder[i]]->getTranslatorGraphicLayer());
 
     installWidgetsInGuiLayout();
     printObject();

@@ -12,6 +12,7 @@
 #include "midiPortConsumers.h"
 #include "midiSource.h"
 #include "midiGraphicTranslator.h"
+#include "one2OneTranslator.h"
 #include "graphicDisplayer.h"
 
 const int nbMaxMidiSources = 16;

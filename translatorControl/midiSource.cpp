@@ -144,7 +144,7 @@ void  MidiSource::receiveMidiMessage(std::vector<unsigned char> *message)
                                                                     // forwarding Midi event in a Midivent object to consumers
     qCDebug(Mvent,"just before sending Midivent to %1d comsumers (toBeSent = %s)\n",nbConsumers,(toBeSent?"true":"false"));
     if (toBeSent) {
-        Midivent fevt(evtyp,data1);
+        Midivent fevt(evtyp,data1,data2);
         //MidiGraphicTranslator *p = 0;
         for (int i = 0; i < nbConsumers; i++) {
             qCDebug(Mvent,"calling receiveMidivent of Consumer #%02d (%p) with ", internalId2displayId(i),consumers[i]);

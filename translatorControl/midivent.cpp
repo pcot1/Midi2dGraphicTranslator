@@ -1,13 +1,21 @@
 #define DEBUG
 #include "midivent.h"
 
+/*
+// *** static septet filter (remove Most Significat Bit)
+septet Midivent::septetFilter(unsigned char byte)  {
+    return(byte & (unsigned char)(0b01111111))
+}
+*/
+
 // *** trivial Constructor
-Midivent::Midivent() : typeName(None), noteId(0)
+Midivent::Midivent() : typeName(None), noteId(0), velocity(0)
 {
 }
 
 // *** Constructor
-Midivent::Midivent(MidiventTypeName theType, int theNote) : typeName(theType), noteId(theNote)
+Midivent::Midivent(MidiventTypeName theType, septet data1, septet data2) :
+    typeName(theType), noteId(septetFilter(data1)),velocity(septetFilter(data2))
 {
 }
 
@@ -40,8 +48,16 @@ MidiventTypeName Midivent::getType(void) const
     return typeName;
 }
 
+/*
 // *** accessor
 int Midivent::getNote(void) const
 {
-    return (int)(noteId);
+    return (noteId);
 }
+
+// *** accessor
+int Midivent::getVelocity(void) const
+{
+    return (velocity);
+}
+*/
