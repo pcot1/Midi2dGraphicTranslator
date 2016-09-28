@@ -136,20 +136,38 @@ void  MidiSource::receiveMidiMessage(std::vector<unsigned char> *message)
         return;                                                         // I only consider "note" message: note off "8n" or note on "9n"
     }
     qCInfo(Mm2v,"MidiSource #%02d: transforming Midi Message %p = (0x%x,%d,%d) in Midivent\n",internalId2displayId(instanceId),message,status,data1,data2);
+    /*
     if ((status & (unsigned char)(0b10001111)) == status)
         evtyp = NoteOff;                                                // if status is "8n", it's a note off
     if ((status & (unsigned char)(0b10011111)) == status)
         evtyp = NoteOn;                                                 // if status is "9n", it's a note on
+    */
+    if (status & (unsigned char)(0b00010000))
+        evtyp = NoteOn;                                                // if status is "9n", it's a note on
+    else
+        evtyp = NoteOff;                                               // if status is "8n", it's a note off
+
     if ( (data1 & (unsigned char)(0b10000000)) || (data2 & (unsigned char)(0b10000000)) ) {
         qCDebug(Mmsg,"MidiSource #%02d: drop Midi Message(0x%x,%d,%d) because data has MSB = 1\n",internalId2displayId(instanceId),status,data1,data2);
         return;                                                         // 2 following byte should be "data" ones (1st bit = 0)
     }
-                                                                    // midi channel extraction
+    if (data2 == 0)
+        evtyp = NoteOff;                                                // velocity = 0 => noteOff (even if status "9n")
+    switch (evtyp)  {                                               // counting current nb of notes on for the Midi Port
+       case NoteOn:
+            qCDebug(Mm2v,"MidiSource #%02d: Midi Message(0x%x,%d,%d) is identified as NoteOn\n",internalId2displayId(instanceId),status,data1,data2);
+            break;
+       case NoteOff:
+            qCDebug(Mm2v,"MidiSource #%02d: Midi Message(0x%x,%d,%d) is identified as NoteOn\n",internalId2displayId(instanceId),status,data1,data2);
+            break;
+       default:
+            qCDebug(Mm2v,"MidiSource #%02d: Midi Message(0x%x,%d,%d) is NOT identified (None)\n",internalId2displayId(instanceId),status,data1,data2);
+            ;
+    }
+                                                                        // midi channel extraction
     channel = (int)((status & ((unsigned char)(0b00001111))));  // midi channel is 4 LSB fo the status byte
     qCDebug(Mm2v,"MidiSource #%02d: Channel identified = %d (allChannels %s, midiChannelId %d)\n",internalId2displayId(instanceId),channel,(allChannels ? "true" : "false"),midiChannelId);
 
-    if (data2 == 0)
-        evtyp = NoteOff;                                                // velocity = 0 => noteOff (even if status "9n")
     switch (evtyp)  {                                               // counting current nb of notes on for the Midi Port
        case NoteOn:
             ++nbMidiPortNoteOn; break;

@@ -194,8 +194,19 @@ void MidiGraphicTranslator::requireWidgetMvtFastForward(void)   {
 
 void MidiGraphicTranslator::changingMidiSource(int displayId)
 {
-    if (displayId == undefinedMidiSource)               // the ComboBox is not initialized
+    qCDebug(GRgrp,"MidiGraphicTranslator::changingMidiSource(#%02d)\n",displayId);
+    if (displayId == undefinedMidiSource)                // the ComboBox is not initialized (normally never happen)
         return;
+    if (displayId == 0)  {                               // no MidiSource
+                                                            // delete all item from this translator
+        QList <QGraphicsItem *> itemList;
+        itemList = graphicLayer->childItems();
+        qCCritical(GRgrp,"cleaning graphicLayer %p which had %d items\n",graphicLayer,itemList.size());
+        for (int i = 0; i < itemList.size(); i++) {
+            (graphicLayer->scene())->removeItem(itemList.at(i));
+        }
+    }
+
     int msId = displayId2internalId(displayId);
     qCDebug(GUtru,"changingMidiSource of instance %d: (%d -> %d ) \n",instanceId,MidiSourceId,msId);
     if (msId == MidiSourceId)
