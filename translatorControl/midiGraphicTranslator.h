@@ -74,7 +74,6 @@ protected:
 private:
     static int nbCreated;                           // nb of already created translators
     int instanceId;                                 // id of this translator
-    QString translatorName;                         // the Translator editable name
     int MidiSourceId;                               // current MidiSource (None = -1)
     int nbMidiRecievedNoteOn;                       // current Midi activity
     void *noteThing[128];                           // pointer when note is pressed

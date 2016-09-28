@@ -17,6 +17,11 @@ MidiSource::MidiSource(QWidget *pparent, QStringList *availableMidiPortNames) : 
     instanceId = nbCreated++;
     nbMidiPortNoteOn=0;
     nbMidiSourceNoteOn=0;
+                                                                        // colorize the MidiSource Widget
+    this->setPalette(QPalette(QColor(230,220,220,255)));
+    this->setAutoFillBackground(true);
+
+
     sprintf(bla,"Midi Source #%02d",internalId2displayId(instanceId));
     setTitle(bla);
                                                                       // MidiSource Name
@@ -24,7 +29,9 @@ MidiSource::MidiSource(QWidget *pparent, QStringList *availableMidiPortNames) : 
     MidiSourceName = new QLineEdit(bla);                         // user editable Source name
                                                                       // MidiPort Chooser
     //QLabel *MidiPortLabel = new QLabel("Midi Port:");
-    MidiPortLabel = new QLabel("Midi Port:");
+    MidiPortLabel = new QLabel(this);
+    MidiPortLabel->setPixmap(QPixmap("./MIDI-icon.png"));
+
                                                                             // gui knows about MidiPorts from its RtMidi Manager
     MidiPorts_ComboBox = new QComboBox();
     MidiPorts_ComboBox->addItems(*availableMidiPortNames);
@@ -38,7 +45,7 @@ MidiSource::MidiSource(QWidget *pparent, QStringList *availableMidiPortNames) : 
     MidiPortsLayout->addWidget(MidiPorts_ComboBox);
                                                                         // MidiChannel Chooser
     allChannels = true;
-    channelId = 0;
+    midiChannelId = 0;
     //QLabel *MidiChannelLabel = new QLabel("Midi Channel:");
     MidiChannelLabel = new QLabel("Midi Channel:");
     QStringList *pMidiChannelNames = new QStringList("All");
@@ -48,6 +55,7 @@ MidiSource::MidiSource(QWidget *pparent, QStringList *availableMidiPortNames) : 
     MidiChannels_ComboBox = new QComboBox();
     MidiChannels_ComboBox->addItems(*pMidiChannelNames);
     MidiChannels_ComboBox->setCurrentIndex(0);
+    QObject::connect(MidiChannels_ComboBox,SIGNAL(currentIndexChanged(int)),this,SLOT(changingMidiChannel(int)));
     //QHBoxLayout *MidiChannelsLayout = new QHBoxLayout;
     MidiChannelsLayout = new QHBoxLayout;
     MidiChannelsLayout->addWidget(MidiChannelLabel);
@@ -79,6 +87,21 @@ void MidiSource::changingMidiPort(int newMidiPortId)
     midiPortId = newMidiPortId;
 }
 
+// *** Private Slot: changingMidiCHannel
+void MidiSource::changingMidiChannel(int comboBoxId)
+{
+    qCDebug(GUmsu,"changingMidiChannel of instance %d: ",instanceId);
+    if (comboBoxId == 0 )    {
+        allChannels = true;
+        midiChannelId = 0;
+        qCDebug(GUmsu,"allChannels !\n",instanceId,midiChannelId,displayId2internalId(comboBoxId));
+        return;
+    }
+    qCDebug(GUmsu,"(%d -> %d )\n",instanceId,midiChannelId,displayId2internalId(comboBoxId));
+    allChannels = false;
+    midiChannelId = displayId2internalId(comboBoxId);
+}
+
 // *** Public Slot: updateAvailableMidiPortList
 void MidiSource::updateAvailableMidiPortList(QStringList *midiPortNames)
 {
@@ -91,30 +114,39 @@ void  MidiSource::receiveMidiMessage(std::vector<unsigned char> *message)
     int size = message->size();
     int channel = 0x0;
     unsigned char status = message->at(0);
-    qCDebug(Mmsg,"recieving Midi Message %p = (%x,...)\n",message,status);
-    qCDebug(Mmsg,"status & 0b10000000 = %x\n",(status & ((unsigned char)(0b10000000))));
-    qCDebug(Mmsg,"status & 0b10010000 = %x\n",(status & ((unsigned char)(0b10010000))));
+    //qCDebug(Mmsg,"recieving Midi Message %p = (%x,...)\n",message,status);
+    //qCDebug(Mmsg,"status & 0b10000000 = %x\n",(status & ((unsigned char)(0b10000000))));
+    //qCDebug(Mmsg,"status & 0b10010000 = %x\n",(status & ((unsigned char)(0b10010000))));
 
     // midi message format checks
-    if (size < 3)
+    if (size < 3)   {
+        qCDebug(Mmsg,"drop Midi Message status 0x%x because size %d\n",status,size);
         return;                                                         // a "note" midi message is at least 1 byte status + 2 byte data
+    }
     unsigned char data1 = message->at(1);
     unsigned char data2 = message->at(2);
-    qCDebug(Mmsg,"transforming Midi Message %p = (%x,%d,%d) in Midivent\n",message,status,data1,data2);
-    qCDebug(Mmsg,"data1 & 0b10000000 = %x\n",(message->at(1) & ((unsigned char)(0b10000000))));
-    qCDebug(Mmsg,"data2 & 0b10000000 = %x\n",(message->at(2) & ((unsigned char)(0b10000000))));
-    if (! (status & ((unsigned char)(0b10000000))) )
+    //qCDebug(Mmsg,"data1 & 0b10000000 = %x\n",(message->at(1) & ((unsigned char)(0b10000000))));
+    //qCDebug(Mmsg,"data2 & 0b10000000 = %x\n",(message->at(2) & ((unsigned char)(0b10000000))));
+    if (! (status & ((unsigned char)(0b10000000))) )    {
+        qCWarning(Mmsg,"MidiSource #%02d: drop Midi Message(0x%x,%d,%d) because status MSB is not 1\n",internalId2displayId(instanceId),status,data1,data2);
         return;                                                         // first byte should be a "status" byte => 1st bit is 1
-    if ( ((status & (unsigned char)(0b10000000)) != status) && ((status & (unsigned char)(0b10010000)) != status) )
+    }
+    if ( ((status & (unsigned char)(0b10001111)) != status) && ((status & (unsigned char)(0b10011111)) != status) ) {
+        qCDebug(Mmsg,"MidiSource #%02d: drop Midi Message(0x%x,%d,%d) because status is not 0x8n or 0x9n\n",internalId2displayId(instanceId),status,data1,data2);
         return;                                                         // I only consider "note" message: note off "8n" or note on "9n"
-    if ((status & (unsigned char)(0b10000000)) == status)
+    }
+    qCInfo(Mm2v,"MidiSource #%02d: transforming Midi Message %p = (0x%x,%d,%d) in Midivent\n",internalId2displayId(instanceId),message,status,data1,data2);
+    if ((status & (unsigned char)(0b10001111)) == status)
         evtyp = NoteOff;                                                // if status is "8n", it's a note off
-    if ((status & (unsigned char)(0b10010000)) == status)
+    if ((status & (unsigned char)(0b10011111)) == status)
         evtyp = NoteOn;                                                 // if status is "9n", it's a note on
-    if ( (data1 & (unsigned char)(0b10000000)) || (data2 & (unsigned char)(0b10000000)) )
+    if ( (data1 & (unsigned char)(0b10000000)) || (data2 & (unsigned char)(0b10000000)) ) {
+        qCDebug(Mmsg,"MidiSource #%02d: drop Midi Message(0x%x,%d,%d) because data has MSB = 1\n",internalId2displayId(instanceId),status,data1,data2);
         return;                                                         // 2 following byte should be "data" ones (1st bit = 0)
+    }
                                                                     // midi channel extraction
     channel = (int)((status & ((unsigned char)(0b00001111))));  // midi channel is 4 LSB fo the status byte
+    qCDebug(Mm2v,"MidiSource #%02d: Channel identified = %d (allChannels %s, midiChannelId %d)\n",internalId2displayId(instanceId),channel,(allChannels ? "true" : "false"),midiChannelId);
 
     if (data2 == 0)
         evtyp = NoteOff;                                                // velocity = 0 => noteOff (even if status "9n")
@@ -122,25 +154,37 @@ void  MidiSource::receiveMidiMessage(std::vector<unsigned char> *message)
        case NoteOn:
             ++nbMidiPortNoteOn; break;
        case NoteOff:
-            --nbMidiPortNoteOn; break;
+            --nbMidiPortNoteOn;
+            if (nbMidiPortNoteOn < 0)
+                nbMidiPortNoteOn = 0;
+            break;
        default:
             ;
     }
 
-    if (allChannels || (channel == channelId))
+    if (allChannels || (channel == midiChannelId)) {
         toBeSent = true;                                                // Source is forwarding this channel
+    } else {
+           qCDebug(Mm2v,"MidiSource #%02d: drop Midi Message(0x%x,%d,%d) because channel %d rejected\n",internalId2displayId(instanceId),status,data1,data2,channel);
+    }
 
     switch (evtyp)  {                                              // counting current nb of notes on for the Midi Source (port+channel)
        case NoteOn:
             ++nbMidiSourceNoteOn; break;
        case NoteOff:
-            --nbMidiSourceNoteOn; break;
+            --nbMidiSourceNoteOn;
+            if (nbMidiSourceNoteOn < 0)
+                nbMidiSourceNoteOn = 0;
+            break;
        default:
             ;
     }
+    qCDebug(Mm2v,"nbMidiPortNoteOn %d, nbMidiSourceNoteOn %d\n",nbMidiPortNoteOn,nbMidiSourceNoteOn);
 
-    if (nbConsumers <= 0)
+    if (nbConsumers <= 0)   {
+        qCDebug(Mm2v,"MidiSource #%02d: drop Midi Message(0x%x,%d,%d) because NO resgistered consumers\n",internalId2displayId(instanceId),status,data1,data2);
         return;                                                         // nothing to forward is no consumers
+    }
                                                                     // forwarding Midi event in a Midivent object to consumers
     qCDebug(Mvent,"just before sending Midivent to %1d comsumers (toBeSent = %s)\n",nbConsumers,(toBeSent?"true":"false"));
     if (toBeSent) {

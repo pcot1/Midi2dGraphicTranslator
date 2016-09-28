@@ -24,13 +24,15 @@ MidiGraphicTranslator::MidiGraphicTranslator(QWidget *pparent) : QGroupBox(ppare
     for (int i = 0; i < 128; i++)
             noteThing[i] = 0;
 
+    // colorize the MidiSource Widget
+    this->setPalette(QPalette(QColor(220,220,230,255)));
+    this->setAutoFillBackground(true);
                                                                       // initialization of GUI part
     sprintf(bla,"Graphic Translator #%02d",internalId2displayId(instanceId));
     setTitle(bla);                                                    // the widget title
                                                                       // Translator Name + Quit Button;
     sprintf(bla,"Translator #%02d",internalId2displayId(instanceId));
-    translatorName = QString(bla);
-    MidiGraphicTranslatorName = new QLineEdit(translatorName);
+    MidiGraphicTranslatorName = new QLineEdit(QString(bla));
     quit_Button = new QPushButton();
     quit_Button->setIcon(QIcon("./power-icon.png"));
     //QHBoxLayout *header_Layout = new QHBoxLayout;
@@ -71,7 +73,7 @@ MidiGraphicTranslator::MidiGraphicTranslator(QWidget *pparent) : QGroupBox(ppare
     MidiSource_Label = new QLabel("Midi Source:");
     MidiSources_ComboBox = new QComboBox();
     MidiSources_ComboBox->addItem((QString)("None"));
-    updateListOfMidiSourcesInComboBox(2);
+    updateListOfMidiSourcesInComboBox(1);
     MidiSources_ComboBox->setCurrentIndex(0);
     qCDebug(GUtri,"MidiSources_ComboBox current index %d\n",MidiSources_ComboBox->currentIndex());
     MidiSourceId = undefinedMidiSource;
@@ -81,8 +83,8 @@ MidiGraphicTranslator::MidiGraphicTranslator(QWidget *pparent) : QGroupBox(ppare
     MidiSource_Layout->addWidget(MidiSources_ComboBox,0,Qt::AlignTop);
     MidiSource_Layout->setAlignment(Qt::AlignTop);
     QObject::connect(MidiSources_ComboBox,SIGNAL(currentIndexChanged(int)),this,SLOT(changingMidiSource(int)));
-    QObject::connect(this,SIGNAL(unRegisterMidiSource(int)),pparent,SLOT(removeConsumerRequest(int)));
-    QObject::connect(this,SIGNAL(registerMidiSource(int)),pparent,SLOT(addConsumerRequest(int)));
+    QObject::connect(this,SIGNAL(unRegisterMidiSource(int)),pparent,SLOT(removeMidiSourceConsumerRequest(int)));
+    QObject::connect(this,SIGNAL(registerMidiSource(int)),pparent,SLOT(addMidiSourceConsumerRequest(int)));
                                                                     // GroupBox Vertical Layout
     //QVBoxLayout *MidiGraphicTranslatorGroupLayout = new QVBoxLayout;
     MidiGraphicTranslatorGroupLayout = new QVBoxLayout;
@@ -128,13 +130,13 @@ int MidiGraphicTranslator::getInstanceId(void) const
 // *** accessor
 QString MidiGraphicTranslator::getTranslatorName(void) const
 {
-    return(translatorName);
+    return(MidiGraphicTranslatorName->text());
 }
 
 // *** accessor
 void MidiGraphicTranslator::setTranslatorName(QString name)
 {
-    translatorName = name;
+    MidiGraphicTranslatorName->setText(name);
     return;
 }
 
@@ -297,7 +299,8 @@ void MidiGraphicTranslator::processNoteOff(unsigned char note, unsigned char vel
 
     QGraphicsItem *item = (QGraphicsItem *)(getNoteThing(note));
     if (item == 0)  {
-        qCWarning(GRgrp,"TR #%02d (%p) retrive NULL graphics item in noteThing for note %d\n",instanceId,this,note);
+        qCWarning(GRgrp,"TR #%02d (%p) retreive NULL graphics item in noteThing for note %d\n",instanceId,this,note);
+        /*
         qCDebug(GRgrp,"TR #%02d decision to clean the whole graphicLayer %p\n",instanceId,this,graphicLayer);
         itemList = graphicLayer->childItems();
         qCDebug(GRgrp,"graphicLayer %p had %d items before \n",graphicLayer,itemList.size());
@@ -307,6 +310,7 @@ void MidiGraphicTranslator::processNoteOff(unsigned char note, unsigned char vel
         }
         itemList = graphicLayer->childItems();
         qCDebug(GRgrp,"graphicLayer %p has now %d items after\n",graphicLayer,itemList.size());
+        */
         return;
     }
     qCDebug(GRgrp,"the item scene is %p\n",item->scene());

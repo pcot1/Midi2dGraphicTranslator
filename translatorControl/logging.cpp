@@ -4,6 +4,7 @@
                                                         // logging catagory association with QLoggingCategory instances
 Q_LOGGING_CATEGORY(Minit, "midi.init");                     // initialization of MIDI processing (RtMidi)
 Q_LOGGING_CATEGORY(Mmsg,  "midi.flow.message");             // processing MIDI messages
+Q_LOGGING_CATEGORY(Mm2v,  "midi.flow.msg2vent");            // processing MIDI messages transformation in Midivent
 Q_LOGGING_CATEGORY(Mvent, "midi.flow.midivent");            // processing Midivent
 Q_LOGGING_CATEGORY(GUinit,"gui.main.init");                 // initialization of the gui window
 Q_LOGGING_CATEGORY(GUupd, "gui.main.update");               // update of the gui window

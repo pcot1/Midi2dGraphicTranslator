@@ -6,14 +6,19 @@
 One2OneTranslator::One2OneTranslator(QWidget *pparent) : MidiGraphicTranslator(pparent)
 {
     abstractItemColor = QColor(180,180,180,255);                               // default color is dark gray
-    //sizeln = 0;                                                 // default sizeln = 0 (size = 1)
-    abstractItemSize = 12;                                                   // default sizeln = 1 (sizeln = 0)
+    abstractItemSize = 12;                                                   // default sizeln = 1
 
     color_Button = new QPushButton("color");
-    color_Button->setMaximumWidth(40);
+    color_Button->setMaximumWidth(36);
     color_Button->setPalette(QPalette(abstractItemColor));
     color_Button->setAutoFillBackground(true);
     QObject::connect(color_Button,SIGNAL(clicked()),this,SLOT(setAbstractItemColor()));
+    color_Box = new QGroupBox(this);
+    color_Box->setPalette(QPalette(abstractItemColor));
+    color_Box->setAutoFillBackground(true);
+    color_Layout = new QHBoxLayout;
+    color_Layout->addWidget(color_Button,0,Qt::AlignCenter);
+    color_Box->setLayout(color_Layout);
 
     sizeln_Label = new QLabel("Size:");
     QFont smallerLabel = sizeln_Label->font();
@@ -33,7 +38,8 @@ One2OneTranslator::One2OneTranslator(QWidget *pparent) : MidiGraphicTranslator(p
     QObject::connect(sizeln_Dial,SIGNAL(valueChanged(int)),this,SLOT(setAbstractItemSize(int)));
 
     abstractItem_Layout = new QHBoxLayout;
-    abstractItem_Layout->addWidget(color_Button,60,Qt::AlignCenter);
+    //abstractItem_Layout->addWidget(color_Button,60,Qt::AlignCenter);
+    abstractItem_Layout->addWidget(color_Box,60,Qt::AlignCenter);
     abstractItem_Layout->addWidget(sizeln_Label,0,Qt::AlignRight);
     abstractItem_Layout->addWidget(sizeln_Dial,40,Qt::AlignTop);
     addLayout(abstractItem_Layout);
@@ -42,7 +48,6 @@ One2OneTranslator::One2OneTranslator(QWidget *pparent) : MidiGraphicTranslator(p
 // *** Destructor
 One2OneTranslator::~One2OneTranslator()
 {
-
 }
 
 void One2OneTranslator::printObject(void) const     {
@@ -53,6 +58,48 @@ void One2OneTranslator::printObject(void) const     {
 // *** private slot
 void One2OneTranslator::setAbstractItemColor(void)  {
 
+    abstractItemColor = QColorDialog::getColor(abstractItemColor, this);
+    QPalette colorPalette(abstractItemColor);
+    color_Button->setPalette(colorPalette);
+    color_Box->setPalette(colorPalette);
+    //color_Button->setStyleSheet("background-color:black;");
+    /*QPalette pal = color_Button->palette();
+
+    pal.setColor(QPalette::Button, abstractItemColor);
+    pal.setColor(QPalette::Light, abstractItemColor);
+    pal.setColor(QPalette::Midlight, abstractItemColor);
+    pal.setColor(QPalette::Mid, abstractItemColor);
+    pal.setColor(QPalette::Dark, abstractItemColor);
+    //color_Button->setContentsMargins(5,5,5,5);
+    color_Button->setAutoFillBackground(true);
+    color_Button->setPalette(QPalette(abstractItemColor));
+    //color_Button->update();
+    */
+     /*
+    color_Button->setPalette(QPalette(abstractItemColor));
+
+    color_Button->setAutoFillBackground(true);
+    color_Button->update();
+    */
+
+      /*
+      QPalette pal = color_Button->palette();
+      pal.setColor(QPalette::Button, abstractItemColor);
+      color_Button->setAutoFillBackground(true);
+      color_Button->setPalette(pal);
+      color_Button->update();
+      */
+
+    /*
+    const QColorDialog::ColorDialogOptions options = QFlag(colorDialogOptionsWidget->value());
+    const QColor color = QColorDialog::getColor(Qt::green, this, "Select Color", options);
+
+          if (color.isValid()) {
+              colorLabel->setText(color.name());
+              colorLabel->setPalette(QPalette(color));
+              colorLabel->setAutoFillBackground(true);
+          }
+          */
 }
 
 // *** private slot
@@ -112,34 +159,3 @@ void One2OneTranslator::processNoteOff(unsigned char note, unsigned char velocit
     return;
 }
 
-// *** transform a Midivent noteOn in graphic action
-QGraphicsItem *One2OneTranslator::createGraphicsItem(septet note, septet velocity)   {
-
-    char bla[16];
-    qCDebug(GRgrp,"One2OneTranslator::createGraphicsItem(%d,%d)\n",note,velocity);
-    QGraphicsTextItem *pText = new  QGraphicsTextItem;
-    pText->setFont(QFont("Impact",abstractItemSize));
-    qCDebug(GRgrp,"note is %s octave #%d\n",qPrintable(getNoteName(note)),getNoteOctave(note));
-    sprintf(bla,"%s[%1d]",qPrintable(getNoteName(note)),getNoteOctave(note));
-    pText->setPlainText(QString(bla));
-    pText->setDefaultTextColor(abstractItemColor);
-    qCDebug(GRgrp,"return item %p to be added to the group %p\n",(QGraphicsItem *)pText,graphicLayer);
-    return((QGraphicsItem *)pText);
-}
-
-// *** transform a previously created graphic item thanks to note parameters
-void One2OneTranslator::modifyGraphicsItem(QGraphicsItem *item, septet note, septet velocity)   {
-
-    qCDebug(GRgrp,"One2OneTranslator::modifyGraphicsItem(%p,%d,%d)\n",item,note,velocity);
-    return;
-}
-
-// *** position a previously created graphic item thanks to note parameters
-void One2OneTranslator::positionGraphicsItem(QGraphicsItem *item, septet note, septet velocity)   {
-
-    qCDebug(GRgrp,"One2OneTranslator::positionGraphicsItem(%p,%d,%d)\n",item,note,velocity);
-    QPointF where = generateRandomWorldCoordinates();
-    qCDebug(GRgrp,"drawing item %p in (%+3.1f,%+3.1f)\n",item,where.x(),where.y());
-    item->setPos(where);
-    return;
-}

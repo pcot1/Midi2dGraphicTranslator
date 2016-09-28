@@ -31,7 +31,7 @@ public:
 
     RtMidiPorts();                                    // constructor discovers existing Midi ports
     ~RtMidiPorts();
-    void setWindowMessage(QString &msg);                 // replace the window message
+    void setWindowMessage(QString &msg);              // replace the RtMidiPorts window message
     int getNbRtMidiPorts(void);                       // accessor
     QStringList *getRtMidiPortsNames(void);           // accessor
     MidiPortConsumers *getConsumersOfMidiPortIndex(int id);   // accessor

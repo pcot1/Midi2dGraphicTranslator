@@ -5,6 +5,7 @@
 
 Q_DECLARE_LOGGING_CATEGORY(Minit);              // midi.init
 Q_DECLARE_LOGGING_CATEGORY(Mmsg);               // midi.flow.message
+Q_DECLARE_LOGGING_CATEGORY(Mm2v);               // midi.flow.msg2vent
 Q_DECLARE_LOGGING_CATEGORY(Mvent);              // midi.flow.midivent
 Q_DECLARE_LOGGING_CATEGORY(GUinit);             // gui.main.init
 Q_DECLARE_LOGGING_CATEGORY(GUupd);              // gui.main.update

@@ -49,16 +49,17 @@ signals:
     void myMidiPortHasChanged(int,int);             // signal to gui to change listening Midi Port
 private slots:
     void changingMidiPort(int index);               // action of MidiPort combo box
+    void changingMidiChannel(int index);            // action of MidiChannel combo box
 private:
     static int nbCreated;                           // nb of already created translators
     int instanceId;                                 // id of this MidiSource
-    unsigned int nbMidiPortNoteOn;                  // current Midi Port activity
-    unsigned int nbMidiSourceNoteOn;                // current MidiQSource activity after filtering
+    int nbMidiPortNoteOn;                           // current Midi Port activity
+    int nbMidiSourceNoteOn;                         // current MidiQSource activity after filtering
     int midiPortId;                                 // index of selected input Midi port
     bool allChannels;                               // Flag listening to all channels
-    int channelId;                                  // channel selected
+    int midiChannelId;                              // channel selected
     int nbConsumers;                                // number of generated Midivent listeners
-    MidiventConsumer *consumers[nbMaxConsumers];        // list of generated Midivent listeners
+    MidiventConsumer *consumers[nbMaxConsumers];    // list of generated Midivent listeners
                                                 // Gui part
     QLineEdit *MidiSourceName;                      // header : MidiSource name
     QLabel *MidiPortLabel;                          // MidiPort : gui part label

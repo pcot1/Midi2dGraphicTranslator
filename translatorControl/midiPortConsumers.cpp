@@ -43,9 +43,27 @@ void MidiPortConsumers::removeAllMidiPortConsumers(void)
         consumers[i] = 0;
 }
 
-void MidiPortConsumers::addConsumer(MidiSource * consumer)
+void MidiPortConsumers::removeMidiPortConsumer(MidiSource * consumer)
 {
-    qCDebug(Minit,"addConsumer %p with MidiSource %p",this,consumer);
+    qCDebug(Minit,"MidiPortConsumers::removeMidiPortConsumer %p\n",consumer);
+    int targetConsumerId = -1;
+    for (int i = 0; i < nbConsumers; i++)
+        if (consumers[i] == consumer)
+            targetConsumerId = i;
+    if (targetConsumerId < 0)   {
+        qCDebug(Minit,"MidiPortConsumer (MidiSource) %p not found in this MidiPortsConsumers %p\n",consumer,this);
+        return;
+    }
+    for (int i = targetConsumerId; i < (nbConsumers-1); i++)
+        consumers[i] = consumers[i+1];
+    --nbConsumers;
+    consumers[nbConsumers] = 0;
+    return;
+}
+
+void MidiPortConsumers::addMidiPortConsumer(MidiSource * consumer)
+{
+    qCDebug(Minit,"add a MidiPortConsumer %p = MidiSource %p",this,consumer);
     consumers[nbConsumers] = consumer;
     ++nbConsumers;
     printObject();

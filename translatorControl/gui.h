@@ -13,13 +13,14 @@
 #include "midiSource.h"
 #include "midiGraphicTranslator.h"
 #include "one2OneTranslator.h"
+#include "noteNameTranslator.h"
 #include "graphicDisplayer.h"
 
 const int nbMaxMidiSources = 16;
 const int nbMaxMidiSourcesPerRow = 8;
 const int nbMaxMidiGraphicTranslators = 16;
 const int nbMaxMidiGraphicTranslatorsPerRow = 8;
-const int widthLayoutActiveCell = 140;
+const int widthLayoutActiveCell = 148;
 const int widthLayoutControlCell = 90;
 
 /*********************************************************************************************************************/
@@ -52,8 +53,8 @@ public slots:
     void addMidiGraphicTranslator(void);                        // action required = create a new Graphic Translator
     void deleteMidiGraphicTranslator(int id);                   // action required = delete an existing Graphic Translator
     void moveMidiGraphicTranslators(int translatorInstanceId, int mvt); // action required = change rendering order of Graphic Translators
-    void addConsumerRequest(int MidiSourceId);                  // action required = add a GraphicTranslator as consumer of a MidiSource
-    void removeConsumerRequest(int MidiSourceId);               // action required = remove a GraphicTranslator as consumer of a MidiSource
+    void addMidiSourceConsumerRequest(int MidiSourceId);                  // action required = add a GraphicTranslator as consumer of a MidiSource
+    void removeMidiSourceConsumerRequest(int MidiSourceId);               // action required = remove a GraphicTranslator as consumer of a MidiSource
 private:
                                                             // Midi Ports Management
     RtMidiPorts *rtMidiInPortsManager;                        // RtMidi Ports Management (use of RtMidi lib)
@@ -73,6 +74,7 @@ private:
     QDial *nbMidiSources_Dial;                                  // MidiSource Ctrl : nb of MidiSources
     QVBoxLayout *MidiSourcesCtrl_Layout;                        // MidiSource Ctrl : vertical layout
     QLabel *nbMidiGraphicTranslators_Label;                     // GraphicTranslator Ctrl : name + nb
+    QComboBox *midiGraphicTranslatorType_ComboBox;              // GrapgicTranslator Ctrl : type of next translator
     QPushButton *addMidiGraphicTranslators_Button;              // GraphicTranslator Ctrl : create a new one
     QVBoxLayout *MidiGraphicTranslatorsCtrl_Layout;             // GraphicTranslator Ctrl : vertical layout
                                                             // Gui Layout for MidiSources and GraphicTranslator

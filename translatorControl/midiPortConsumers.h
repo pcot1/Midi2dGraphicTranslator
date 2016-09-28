@@ -20,7 +20,8 @@ public:
     int getNbMidiPortConsumers(void);                       // accessor
     MidiSource *getMidiPortConsumer(int index);             // accessor
     void removeAllMidiPortConsumers(void);                  // empty list
-    void addConsumer(MidiSource * consumer);                // add a Midi port consumer to the list
+    void removeMidiPortConsumer(MidiSource * consumer);     // remove a Midi port consumer of the list
+    void addMidiPortConsumer(MidiSource * consumer);        // add a Midi port consumer to the list
     void printObject(void) const;                           // debug
 private :
     int nbConsumers;                                        // nb of the Midi port consumers in the list
