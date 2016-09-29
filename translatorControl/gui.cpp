@@ -338,7 +338,7 @@ void Gui::addMidiGraphicTranslator(void)
     removeWidgetsFromGuiLayout();
 
     (MidiGraphicTranslators[nbMidiGraphicTranslators])->setFixedWidth(widthLayoutActiveCell);
-    (MidiGraphicTranslators[nbMidiGraphicTranslators])->receiveNumberOfMidiSources(nbMidiSources);
+    (MidiGraphicTranslators[nbMidiGraphicTranslators])->doUpgradeNumberOfMidiSources(nbMidiSources);
     translatorInstanceIds[nbMidiGraphicTranslators] = (MidiGraphicTranslators[nbMidiGraphicTranslators])->getInstanceId();
     translatorRenderingOrder[nbMidiGraphicTranslators] = nbMidiGraphicTranslators;
     gDispl->addItemToScene(MidiGraphicTranslators[nbMidiGraphicTranslators]->getTranslatorGraphicLayer());
@@ -439,7 +439,7 @@ void Gui::propagateNbMidiSourcesUpdate(void)
 {
     qCInfo(GUupd,"Gui::propagateNbMidiSourcesUpdate\n");
     for (int i = 0; i < nbMidiGraphicTranslators; i++)
-       (MidiGraphicTranslators[i])-> receiveNumberOfMidiSources(nbMidiSources);
+       (MidiGraphicTranslators[i])-> doUpgradeNumberOfMidiSources(nbMidiSources);
 }
 
 void Gui::addMidiSourceConsumerRequest(int MidiSourceId)

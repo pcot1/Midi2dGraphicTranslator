@@ -20,7 +20,10 @@ MidiGraphicTranslator::MidiGraphicTranslator(QWidget *pparent) : QGroupBox(ppare
     //char bla[128];
     instanceId=nbCreated;
     ++nbCreated;
-    nbMidiRecievedNoteOn = 0;
+    nbNoteCurrentlyOn = 0;
+    nbRecievedNoteOn = 0;
+    sumReceivedNoteOn = 0;
+    averageReceivedNoteOn = 64;
     for (int i = 0; i < 128; i++)
             noteThing[i] = 0;
 
@@ -122,28 +125,10 @@ void MidiGraphicTranslator::addLayout(QLayout *layout)   {
 }
 
 // *** accessor
-int MidiGraphicTranslator::getInstanceId(void) const
-{
-    return(instanceId);
-}
-
-// *** accessor
-QString MidiGraphicTranslator::getTranslatorName(void) const
-{
-    return(MidiGraphicTranslatorName->text());
-}
-
-// *** accessor
 void MidiGraphicTranslator::setTranslatorName(QString name)
 {
     MidiGraphicTranslatorName->setText(name);
     return;
-}
-
-// *** accessor
-QGraphicsItemGroup *MidiGraphicTranslator::getTranslatorGraphicLayer(void) const
-{
-    return(graphicLayer);
 }
 
 void MidiGraphicTranslator::updateListOfMidiSourcesInComboBox(int nbMS)
@@ -171,7 +156,6 @@ void MidiGraphicTranslator::updateListOfMidiSourcesInComboBox(int nbMS)
     }
     qCDebug(GUtru,"    currentItem of Translator instance %d is now %d\n",instanceId,MidiSources_ComboBox->currentIndex());
 }
-
 
 void MidiGraphicTranslator::terminate(void)
 {
@@ -217,9 +201,9 @@ void MidiGraphicTranslator::changingMidiSource(int displayId)
     emit registerMidiSource(MidiSourceId);
 }
 
-void MidiGraphicTranslator::receiveNumberOfMidiSources(int nbMS)
+void MidiGraphicTranslator::doUpgradeNumberOfMidiSources(int nbMS)
 {
-    qCDebug(GUtru,"receiveNumberOfMidiSources(%d) in instance %d \n",nbMS,instanceId);
+    qCDebug(GUtru,"Translator #%02d doUpgradeNumberOfMidiSources(%d)\n",nbMS,internalId2displayId(instanceId));
     updateListOfMidiSourcesInComboBox(nbMS);
 }
 
@@ -250,6 +234,32 @@ void *MidiGraphicTranslator::getNoteThing(septet note) const {
     return(noteThing[Midivent::septetFilter(note)]);
 }
 
+// *** get Note Name
+QString MidiGraphicTranslator::getNoteName(septet note) const  {
+    switch (note%12)    {
+        case  0: return(QStringLiteral(" C")); break;
+        case  1: return(QStringLiteral("C#")); break;
+        case  2: return(QStringLiteral(" D")); break;
+        case  3: return(QStringLiteral("Eb")); break;
+        case  4: return(QStringLiteral(" E")); break;
+        case  5: return(QStringLiteral(" F")); break;
+        case  6: return(QStringLiteral("F#")); break;
+        case  7: return(QStringLiteral(" G")); break;
+        case  8: return(QStringLiteral("G#")); break;
+        case  9: return(QStringLiteral(" A")); break;
+        case 10: return(QStringLiteral("Bb")); break;
+        case 11: return(QStringLiteral(" B")); break;
+        default:
+            qCCritical(GUtru,"unknpown note\n");
+    }
+    return(QStringLiteral(" H"));
+}
+
+// *** get Note Octave
+int MidiGraphicTranslator::getNoteOctave(septet note) const  {
+    return((note/12)-2);
+}
+
 
 // *** process the reception of a midivent
 void MidiGraphicTranslator::receiveMidivent(Midivent *pevt)
@@ -265,16 +275,13 @@ void MidiGraphicTranslator::receiveMidivent(Midivent *pevt)
         case None:
             qCDebug(Mvent,"Midivent is \"None\"\n"); break;
         case NoteOn:
-            ++nbMidiRecievedNoteOn;
+            newNoteOnAnalysis(pevt->getNote(), pevt->getVelocity());
+            qCDebug(Mvent,"Translator #%02d Midivent is \"NoteOn %3d\" (%d notes currently on)\n",internalId2displayId(instanceId),pevt->getNote(),nbNoteCurrentlyOn);
             processNoteOn(pevt->getNote(), pevt->getVelocity());
             break;
         case NoteOff:
-            --nbMidiRecievedNoteOn;
-            qCDebug(Mvent,"Midivent is \"NoteOff %3d\" (%d notes currently on)\n",pevt->getNote(),nbMidiRecievedNoteOn);
-            if (nbMidiRecievedNoteOn < 0)   {
-                nbMidiRecievedNoteOn = 0;
-                qCDebug(Mvent,"nb notes currently on corrected to %d)\n",nbMidiRecievedNoteOn);
-            }
+            newNoteOffAnalysis(pevt->getNote(), pevt->getVelocity());
+            qCDebug(Mvent,"Translator #%02d Midivent is \"NoteOff %3d\" (%d notes currently on)\n",internalId2displayId(instanceId),pevt->getNote(),nbNoteCurrentlyOn);
             processNoteOff(pevt->getNote(), pevt->getVelocity());
             break;
         default:
@@ -282,8 +289,19 @@ void MidiGraphicTranslator::receiveMidivent(Midivent *pevt)
     }
 }
 
+
+// *** first, let's analyse consequences of a new noteOn
+void MidiGraphicTranslator::newNoteOnAnalysis(septet note, septet velocity)   {
+    qCDebug(Mvent,"Translator #%02d MidiGraphicTranslator::newNoteOnAnalysis(%d,%d)\n",internalId2displayId(instanceId),note, velocity);
+    ++nbRecievedNoteOn;
+    ++nbNoteCurrentlyOn;
+    sumReceivedNoteOn += (int)(note);
+    averageReceivedNoteOn = (septet)(sumReceivedNoteOn / nbRecievedNoteOn);
+    return;
+}
+
 // *** transform a Midivent noteOn in graphic action
-void MidiGraphicTranslator::processNoteOn(unsigned char note, unsigned char velocity)   {
+void MidiGraphicTranslator::processNoteOn(septet note, septet velocity)   {
 
     qCDebug(GRgrp,"MidiGraphicTranslator::processNoteOn updates Translator graphic Layer %p\n",graphicLayer);
     QGraphicsTextItem *pText = new  QGraphicsTextItem;
@@ -299,6 +317,18 @@ void MidiGraphicTranslator::processNoteOn(unsigned char note, unsigned char velo
     setNoteThing(note,(void *)((QGraphicsItem *)(pText)));
     QList <QGraphicsItem *> itemList = graphicLayer->childItems();
     qCDebug(GRgrp,"TR #%02d (%p) graphicLayer %p has %d items\n",instanceId,this,graphicLayer,itemList.size());
+    return;
+}
+
+
+// *** first, let's analyse consequences of a new noteOff
+void MidiGraphicTranslator::newNoteOffAnalysis(septet note, septet velocity)   {
+    qCDebug(Mvent,"Translator #%02d MidiGraphicTranslator::newNoteOffAnalysis(%d,%d)\n",internalId2displayId(instanceId), note, velocity);
+    --nbNoteCurrentlyOn;
+    if (nbNoteCurrentlyOn < 0)   {
+        nbNoteCurrentlyOn = 0;
+        qCDebug(Mvent,"Translator #%02d nb notes currently on corrected to %d)\n",internalId2displayId(instanceId),nbNoteCurrentlyOn);
+    }
     return;
 }
 

@@ -62,44 +62,7 @@ void One2OneTranslator::setAbstractItemColor(void)  {
     QPalette colorPalette(abstractItemColor);
     color_Button->setPalette(colorPalette);
     color_Box->setPalette(colorPalette);
-    //color_Button->setStyleSheet("background-color:black;");
-    /*QPalette pal = color_Button->palette();
-
-    pal.setColor(QPalette::Button, abstractItemColor);
-    pal.setColor(QPalette::Light, abstractItemColor);
-    pal.setColor(QPalette::Midlight, abstractItemColor);
-    pal.setColor(QPalette::Mid, abstractItemColor);
-    pal.setColor(QPalette::Dark, abstractItemColor);
-    //color_Button->setContentsMargins(5,5,5,5);
-    color_Button->setAutoFillBackground(true);
-    color_Button->setPalette(QPalette(abstractItemColor));
-    //color_Button->update();
-    */
-     /*
-    color_Button->setPalette(QPalette(abstractItemColor));
-
-    color_Button->setAutoFillBackground(true);
-    color_Button->update();
-    */
-
-      /*
-      QPalette pal = color_Button->palette();
-      pal.setColor(QPalette::Button, abstractItemColor);
-      color_Button->setAutoFillBackground(true);
-      color_Button->setPalette(pal);
-      color_Button->update();
-      */
-
-    /*
-    const QColorDialog::ColorDialogOptions options = QFlag(colorDialogOptionsWidget->value());
-    const QColor color = QColorDialog::getColor(Qt::green, this, "Select Color", options);
-
-          if (color.isValid()) {
-              colorLabel->setText(color.name());
-              colorLabel->setPalette(QPalette(color));
-              colorLabel->setAutoFillBackground(true);
-          }
-          */
+    return;
 }
 
 // *** private slot
@@ -110,30 +73,10 @@ void One2OneTranslator::setAbstractItemSize(int value)  {
     abstractItemSize = 5 + (int)(size);
 }
 
-// *** get Note Name
-QString One2OneTranslator::getNoteName(septet note) const  {
-    switch (note%12)    {
-        case  0: return(QStringLiteral(" C")); break;
-        case  1: return(QStringLiteral("C#")); break;
-        case  2: return(QStringLiteral(" D")); break;
-        case  3: return(QStringLiteral("Eb")); break;
-        case  4: return(QStringLiteral(" E")); break;
-        case  5: return(QStringLiteral(" F")); break;
-        case  6: return(QStringLiteral("F#")); break;
-        case  7: return(QStringLiteral(" G")); break;
-        case  8: return(QStringLiteral("G#")); break;
-        case  9: return(QStringLiteral(" A")); break;
-        case 10: return(QStringLiteral("Bb")); break;
-        case 11: return(QStringLiteral(" B")); break;
-        default:
-            qCCritical(GUtru,"unknpown note\n");
-    }
-    return(QStringLiteral(" H"));
-}
-
-// *** get Note Octave
-int One2OneTranslator::getNoteOctave(septet note) const  {
-    return((note/12)-2);
+// *** first, let's analyse consequences of a new noteOn
+void One2OneTranslator::newNoteOnAnalysis(septet note, septet velocity)   {
+    MidiGraphicTranslator::newNoteOnAnalysis(note,velocity);
+    return;
 }
 
 // *** transform a Midivent noteOn in graphic action
@@ -152,10 +95,17 @@ void One2OneTranslator::processNoteOn(septet note, septet velocity)   {
     return;
 }
 
+// *** first, let's analyse consequences of a new noteOff
+void One2OneTranslator::newNoteOffAnalysis(septet note, septet velocity)   {
+    MidiGraphicTranslator::newNoteOffAnalysis(note,velocity);
+    return;
+}
+
 // *** transform a Midivent in graphic action
 void One2OneTranslator::processNoteOff(unsigned char note, unsigned char velocity)   {
 
     MidiGraphicTranslator::processNoteOff(note, velocity);
     return;
 }
+
 

@@ -42,13 +42,18 @@ class MidiGraphicTranslator : public QGroupBox, public MidiventConsumer
 public:
     MidiGraphicTranslator(QWidget *parent = Q_NULLPTR);
     virtual ~MidiGraphicTranslator();
-    int getInstanceId(void) const;                  // accessor
-    QString getTranslatorName(void) const;          // accessor
-    void setTranslatorName(QString name);           // accessor
-    QGraphicsItemGroup *getTranslatorGraphicLayer(void) const;    // accessor
-    void receiveNumberOfMidiSources(int nbMS);      // request MidiSource list update
-    virtual void printObject(void) const;           // debug
+                                                    // trivial accessor "get"
+    int getInstanceId(void) const                                   { return(instanceId); }
+    QString getTranslatorName(void) const                           { return(MidiGraphicTranslatorName->text()); }
+    QGraphicsItemGroup *getTranslatorGraphicLayer(void) const       { return(graphicLayer); }
+    septet getAverageReceivedNoteOn() const                         { return(averageReceivedNoteOn); }
+    QString getNoteName(septet note) const;         // get the name of the given note
+    int getNoteOctave(septet note) const;           // get the octave of the given note
+    void setTranslatorName(QString name);           // accessor "set"
+
+    void doUpgradeNumberOfMidiSources(int nbMS);    // recieving an outside request MidiSource list update
     //void registerMidiSource(void (*pf)(Midivent&), int msId);
+    virtual void printObject(void) const;           // debug
     virtual void receiveMidivent(Midivent *pevt);   // trigger translator action
 public slots:
     void terminate(void);                           // action of quit button
@@ -69,15 +74,19 @@ protected:
     void updateListOfMidiSourcesInComboBox(int nbMS);       // private to update MidiSource ComboBox
     void *getNoteThing(septet note) const;         // get the thing of the given note
     void setNoteThing(septet note, void *thing);   // set the note thing of the given note
+    virtual void newNoteOnAnalysis(septet note, septet velocity);
     virtual void processNoteOn(septet note, septet velocity);
+    virtual void newNoteOffAnalysis(septet note, septet velocity);
     virtual void processNoteOff(septet note, septet velocity);
 private:
     static int nbCreated;                           // nb of already created translators
     int instanceId;                                 // id of this translator
     int MidiSourceId;                               // current MidiSource (None = -1)
-    int nbMidiRecievedNoteOn;                       // current Midi activity
+    int nbNoteCurrentlyOn;                          // current Midi activity
+    int nbRecievedNoteOn;                           // current Midi activity
+    int sumReceivedNoteOn;
+    septet averageReceivedNoteOn;
     void *noteThing[128];                           // pointer when note is pressed
-
                                                 // Gui part
     QLineEdit *MidiGraphicTranslatorName;           // header : name
     QPushButton *quit_Button;                       // header : delete Translator

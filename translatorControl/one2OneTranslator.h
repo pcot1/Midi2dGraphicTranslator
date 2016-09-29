@@ -23,13 +23,13 @@ public:
 public slots:
 signals:
 protected:
-    void processNoteOn(septet note, septet velocity);
-    void processNoteOff(septet note, septet velocity);
+    virtual void newNoteOnAnalysis(septet note, septet velocity);
+    virtual void processNoteOn(septet note, septet velocity);
+    virtual void newNoteOffAnalysis(septet note, septet velocity);
+    virtual void processNoteOff(septet note, septet velocity);
     virtual QGraphicsItem *createGraphicsItem(septet note, septet velocity) = 0;
     virtual void modifyGraphicsItem(QGraphicsItem *item, septet note, septet velocity) = 0;
     virtual void positionGraphicsItem(QGraphicsItem *item, septet note, septet velocity) = 0;
-    QString getNoteName(septet note) const;             // get the name of the given note
-    int getNoteOctave(septet note) const;               // get the octave of the given note
     QColor getAbstractItemColor(void) const     { return(abstractItemColor); }
     int getAbstractItemSize(void) const         { return(abstractItemSize); }
 private slots:
@@ -37,7 +37,6 @@ private slots:
     void setAbstractItemSize(int);
 private:
     QColor abstractItemColor;
-    //float sizeln;
     int abstractItemSize;
                                                 // One2One dedicated (abstactTtemProperties) Gui par
     QGroupBox *color_Box;                           // abstactTtemProperties : color of the item
