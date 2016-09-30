@@ -10,6 +10,7 @@ public:
     MidiventConsumer(void);
     virtual ~MidiventConsumer(void);
     virtual void receiveMidivent(Midivent *pevt) = 0;
+    virtual void cleanMidiventContext(void) = 0;
     virtual void printObject(void) const;
 };
 

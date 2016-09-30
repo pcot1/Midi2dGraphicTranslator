@@ -2,6 +2,12 @@
 
 //extern char *bla;
 
+// managing index rules
+inline int displayId2internalId(int i) {return(i-1);}                       // first internalId is 0
+inline int internalId2displayId(int i) {return(i+1);}                       // first displayId is 1
+
+const int normalDialSize = 40;
+
 // *** Constructor
 One2OneTranslator::One2OneTranslator(QWidget *pparent) : MidiGraphicTranslator(pparent)
 {
@@ -24,12 +30,12 @@ One2OneTranslator::One2OneTranslator(QWidget *pparent) : MidiGraphicTranslator(p
     QFont smallerLabel = sizeln_Label->font();
     smallerLabel.setPointSize(7);
     sizeln_Label->setFont(smallerLabel);
-    //qCWarning(GUtru,"font size = %d\n", (sizeln_Label->font().pointSize()));
+    //qCDebug(GUtru,"font size = %d\n", (sizeln_Label->font().pointSize()));
 
     sizeln_Dial = new  QDial();
-    sizeln_Dial->setMaximumSize(40,40);
-    sizeln_Dial->setMinimum(0);
-    sizeln_Dial->setMaximum(40);
+    sizeln_Dial->setMaximumSize(normalDialSize,normalDialSize);
+    sizeln_Dial->setMinimum(1);
+    sizeln_Dial->setMaximum(50);
     sizeln_Dial->setValue(10);
     sizeln_Dial->setWrapping(false);
     sizeln_Dial->setNotchesVisible(true);
@@ -39,9 +45,10 @@ One2OneTranslator::One2OneTranslator(QWidget *pparent) : MidiGraphicTranslator(p
 
     abstractItem_Layout = new QHBoxLayout;
     //abstractItem_Layout->addWidget(color_Button,60,Qt::AlignCenter);
-    abstractItem_Layout->addWidget(color_Box,60,Qt::AlignCenter);
+    abstractItem_Layout->addWidget(color_Box,60,Qt::AlignTop);
     abstractItem_Layout->addWidget(sizeln_Label,0,Qt::AlignRight);
     abstractItem_Layout->addWidget(sizeln_Dial,40,Qt::AlignTop);
+    //abstractItem_Layout->setAlignment(Qt::AlignTop);
     addLayout(abstractItem_Layout);
 }
 
@@ -82,16 +89,16 @@ void One2OneTranslator::newNoteOnAnalysis(septet note, septet velocity)   {
 // *** transform a Midivent noteOn in graphic action
 void One2OneTranslator::processNoteOn(septet note, septet velocity)   {
 
-    qCDebug(GRgrp,"One2OneTranslator::processNoteOn updates Translator graphic Layer %p\n",graphicLayer);
-    qCDebug(GRgrp,"the graphicLayer scene is %p\n",graphicLayer->scene());
+    qCDebug(GRgrp,"Translator #%02d One2OneTranslator::processNoteOn updates Translator graphic Layer %p\n",getDId(),graphicLayer);
+    qCDebug(GRgrp,"Translator #%02d the graphicLayer scene is %p\n",getDId(),graphicLayer->scene());
     QGraphicsItem *item = createGraphicsItem(note,velocity);
     modifyGraphicsItem(item,note,velocity);
     positionGraphicsItem(item,note,velocity);
     graphicLayer->addToGroup(item);
-    qCDebug(GRgrp,"store the item in its scene %p\n",item->scene());
+    qCDebug(GRgrp,"Translator #%02d store the item in its scene %p\n",getDId(),item->scene());
     setNoteThing(note,(void *)(item));
     QList <QGraphicsItem *> itemList = graphicLayer->childItems();
-    qCDebug(GRgrp,"TR #%02d (%p) graphicLayer %p has %d items\n",getInstanceId(),this,graphicLayer,itemList.size());
+    qCDebug(GRgrp,"Translator #%02d (%p) graphicLayer %p has %d items\n",getDId(),this,graphicLayer,itemList.size());
     return;
 }
 

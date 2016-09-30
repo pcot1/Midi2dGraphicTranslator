@@ -23,7 +23,8 @@ SOURCES += main.cpp\
     midiventConsumer.cpp \
     logging.cpp \
     one2OneTranslator.cpp \
-    noteNameTranslator.cpp
+    noteNameTranslator.cpp \
+    polygonTranslator.cpp
 
 HEADERS  += gui.h \
     graphicDisplayer.h \
@@ -36,7 +37,8 @@ HEADERS  += gui.h \
     midiventConsumer.h \
     logging.h \
     one2OneTranslator.h \
-    noteNameTranslator.h
+    noteNameTranslator.h \
+    polygonTranslator.h
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../libRtMidi/release/ -llibRtMidi
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../libRtMidi/debug/ -llibRtMidi

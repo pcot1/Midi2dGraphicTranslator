@@ -1,6 +1,7 @@
 #ifndef NOTENAMETRANSLATOR_H
 #define NOTENAMETRANSLATOR_H
 #include "one2OneTranslator.h"
+#include <QRectF>
 
 
 /*********************************************************************************************************************/

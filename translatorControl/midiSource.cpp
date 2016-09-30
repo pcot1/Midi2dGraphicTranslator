@@ -44,8 +44,8 @@ MidiSource::MidiSource(QWidget *pparent, QStringList *availableMidiPortNames) : 
     MidiPortsLayout->addWidget(MidiPortLabel);
     MidiPortsLayout->addWidget(MidiPorts_ComboBox);
                                                                         // MidiChannel Chooser
-    allChannels = true;
-    midiChannelId = 0;
+    allChannels = false;
+    midiChannelId = instanceId;
     //QLabel *MidiChannelLabel = new QLabel("Midi Channel:");
     MidiChannelLabel = new QLabel("Midi Channel:");
     QStringList *pMidiChannelNames = new QStringList("All");
@@ -54,7 +54,7 @@ MidiSource::MidiSource(QWidget *pparent, QStringList *availableMidiPortNames) : 
 
     MidiChannels_ComboBox = new QComboBox();
     MidiChannels_ComboBox->addItems(*pMidiChannelNames);
-    MidiChannels_ComboBox->setCurrentIndex(0);
+    MidiChannels_ComboBox->setCurrentIndex(internalId2displayId(instanceId));
     QObject::connect(MidiChannels_ComboBox,SIGNAL(currentIndexChanged(int)),this,SLOT(changingMidiChannel(int)));
     //QHBoxLayout *MidiChannelsLayout = new QHBoxLayout;
     MidiChannelsLayout = new QHBoxLayout;
@@ -79,18 +79,29 @@ MidiSource::~MidiSource()
     --nbCreated;
 }
 
+// *** protected: do remove items from graphic Layer of translators which are consumers
+void MidiSource::cleanMidiventContextOfConsumers(void) const {
+
+    for (int i = 0; i < nbConsumers; i++)   {
+        consumers[i]->cleanMidiventContext();
+    }
+}
+
+
 // *** Private Slot: changingMidiPort
 void MidiSource::changingMidiPort(int newMidiPortId)
 {
     qCDebug(GUmsu,"changingMidiPort of instance %d: (%d -> %d ) \n",instanceId,midiPortId,newMidiPortId);
+    cleanMidiventContextOfConsumers();
     emit myMidiPortHasChanged(midiPortId,newMidiPortId);
     midiPortId = newMidiPortId;
 }
 
-// *** Private Slot: changingMidiCHannel
+// *** Private Slot: changingMidiChannel
 void MidiSource::changingMidiChannel(int comboBoxId)
 {
     qCDebug(GUmsu,"changingMidiChannel of instance %d: ",instanceId);
+    cleanMidiventContextOfConsumers();
     if (comboBoxId == 0 )    {
         allChannels = true;
         midiChannelId = 0;

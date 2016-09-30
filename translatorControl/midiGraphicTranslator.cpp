@@ -6,7 +6,11 @@ char bla[128];
 #include "graphicDisplayer.h"
 extern GraphicDisplayer *grDispl;
 
-
+                                                                    // No MidiSource selected
+const int undefinedMidiSource = -1;
+                                                                    // size of small buttons (rendering order)
+const int smallButtonHeight = 23;
+const int smallButtonWidth = 26;
                                                                      // managing index rules
 inline int displayId2internalId(int i) {return(i-1);}                       // first internalId is 0
 inline int internalId2displayId(int i) {return(i+1);}                       // first displayId is 1
@@ -78,7 +82,7 @@ MidiGraphicTranslator::MidiGraphicTranslator(QWidget *pparent) : QGroupBox(ppare
     MidiSources_ComboBox->addItem((QString)("None"));
     updateListOfMidiSourcesInComboBox(1);
     MidiSources_ComboBox->setCurrentIndex(0);
-    qCDebug(GUtri,"MidiSources_ComboBox current index %d\n",MidiSources_ComboBox->currentIndex());
+    qCDebug(GUtri,"Translator #%02d MidiSources_ComboBox current index %d\n",getDId(),MidiSources_ComboBox->currentIndex());
     MidiSourceId = undefinedMidiSource;
     //QHBoxLayout *MidiSource_Layout = new QHBoxLayout;
     MidiSource_Layout = new QHBoxLayout;
@@ -99,7 +103,7 @@ MidiGraphicTranslator::MidiGraphicTranslator(QWidget *pparent) : QGroupBox(ppare
                                                                     // the layer of the graphic scene of this translator
     graphicLayer = new QGraphicsItemGroup();
     QList <QGraphicsItem *> itemList = graphicLayer->childItems();
-    qCDebug(GRgrp,"Translator #%02d (%p) groupItem %p contient %d items \n",internalId2displayId(instanceId),this,graphicLayer,itemList.size());
+    qCDebug(GRgrp,"Translator #%02d (%p) groupItem %p contient %d items \n",getDId(),this,graphicLayer,itemList.size());
 }
 
 // *** Destructor
@@ -107,20 +111,23 @@ MidiGraphicTranslator::~MidiGraphicTranslator(void)
 {
     if (MidiSourceId > undefinedMidiSource)                         // the Translator is no longer a MidiSource consumer
         emit unRegisterMidiSource(MidiSourceId);
+    cleanMidiventContext();
+    (graphicLayer->scene())->removeItem(graphicLayer);
 
 }
 
 void MidiGraphicTranslator::printObject(void) const
 {
-    qCDebug(GUtru,">>> printObject: MidiGraphicTranslator[%1d] showed as #%02d is %p\n",instanceId,internalId2displayId(instanceId),this);
+    qCDebug(GUtru,">>> printObject: MidiGraphicTranslator[%1d] showed as #%02d is %p\n",instanceId,getDId(),this);
 }
 
 // *** add Layout to main vetical Layout
 void MidiGraphicTranslator::addLayout(QLayout *layout)   {
 
     layout->setAlignment(Qt::AlignTop);
+    MidiGraphicTranslatorGroupLayout->setAlignment(Qt::AlignTop);
     MidiGraphicTranslatorGroupLayout->addLayout(layout);
-    //setLayout(MidiGraphicTranslatorGroupLayout);
+    setLayout(MidiGraphicTranslatorGroupLayout);
     return;
 }
 
@@ -133,17 +140,17 @@ void MidiGraphicTranslator::setTranslatorName(QString name)
 
 void MidiGraphicTranslator::updateListOfMidiSourcesInComboBox(int nbMS)
 {
-    qCDebug(GUtru,">>> updateListOfMidiSourcesInComboBox(%2d) of instance %d\n",nbMS,instanceId);
+    qCDebug(GUtru,"Translator #%02d updateListOfMidiSourcesInComboBox(%2d)\n",getDId(),nbMS);
     int nbItems = MidiSources_ComboBox->count();
     int oldNbMS = nbItems - 1;
-    qCDebug(GUtru,"    update from %d to %d MidiSources\n",oldNbMS,nbMS);
+    qCDebug(GUtru,"Translator #%02d update from %d to %d MidiSources\n",getDId(),oldNbMS,nbMS);
     int initialCBMidiSourceId = MidiSources_ComboBox->currentIndex();
-    qCDebug(GUtru,"    old currentItem of Translator instance %d was %d\n",instanceId,initialCBMidiSourceId);
+    qCDebug(GUtru,"Translator #%02d old currentItem was %d\n",getDId(),initialCBMidiSourceId);
     if (initialCBMidiSourceId < 0)                                          // probably useless because current item is 1
         initialCBMidiSourceId = 0;
     if (initialCBMidiSourceId > internalId2displayId(nbMS-1)) {             // currentItem should not be > new last item
         MidiSources_ComboBox->setCurrentIndex(0);
-        qCDebug(GUtru,"    currentItem of Translator instance %d is now %d\n",instanceId,MidiSources_ComboBox->currentIndex());
+        qCDebug(GUtru,"Translator #%02d currentItem is now %d\n",getDId(),MidiSources_ComboBox->currentIndex());
     }
 
     for (int i = nbItems-1; i >= nbMS; i--)
@@ -154,7 +161,7 @@ void MidiGraphicTranslator::updateListOfMidiSourcesInComboBox(int nbMS)
         sprintf(bla,"#%02d",internalId2displayId(i));
         MidiSources_ComboBox->addItem((QString)(bla));
     }
-    qCDebug(GUtru,"    currentItem of Translator instance %d is now %d\n",instanceId,MidiSources_ComboBox->currentIndex());
+    qCDebug(GUtru,"Translator #%02d currentItem is now %d\n",getDId(),MidiSources_ComboBox->currentIndex());
 }
 
 void MidiGraphicTranslator::terminate(void)
@@ -178,21 +185,21 @@ void MidiGraphicTranslator::requireWidgetMvtFastForward(void)   {
 
 void MidiGraphicTranslator::changingMidiSource(int displayId)
 {
-    qCDebug(GRgrp,"MidiGraphicTranslator::changingMidiSource(#%02d)\n",displayId);
+    qCDebug(GRgrp,"Translator #%02d MidiGraphicTranslator::changingMidiSource(#%02d)\n",getDId(),displayId);
     if (displayId == undefinedMidiSource)                // the ComboBox is not initialized (normally never happen)
         return;
     if (displayId == 0)  {                               // no MidiSource
                                                             // delete all item from this translator
         QList <QGraphicsItem *> itemList;
         itemList = graphicLayer->childItems();
-        qCCritical(GRgrp,"cleaning graphicLayer %p which had %d items\n",graphicLayer,itemList.size());
+        qCWarning(GRgrp,"Translator #%02d cleaning graphicLayer %p which had %d items\n",getDId(),graphicLayer,itemList.size());
         for (int i = 0; i < itemList.size(); i++) {
             (graphicLayer->scene())->removeItem(itemList.at(i));
         }
     }
 
     int msId = displayId2internalId(displayId);
-    qCDebug(GUtru,"changingMidiSource of instance %d: (%d -> %d ) \n",instanceId,MidiSourceId,msId);
+    qCDebug(GUtru,"Translator #%02d changingMidiSource (%d -> %d ) \n",getDId(),MidiSourceId,msId);
     if (msId == MidiSourceId)
         return;
     if (MidiSourceId != undefinedMidiSource)
@@ -203,8 +210,14 @@ void MidiGraphicTranslator::changingMidiSource(int displayId)
 
 void MidiGraphicTranslator::doUpgradeNumberOfMidiSources(int nbMS)
 {
-    qCDebug(GUtru,"Translator #%02d doUpgradeNumberOfMidiSources(%d)\n",nbMS,internalId2displayId(instanceId));
+    qCDebug(GUtru,"Translator #%02d doUpgradeNumberOfMidiSources(%d)\n",getDId(),nbMS);
     updateListOfMidiSourcesInComboBox(nbMS);
+}
+
+// *** generate a normalized real value (in [0,1])
+qreal MidiGraphicTranslator::generateRandomRealNormalizedValue(void) const
+{
+    return((qreal)(rand()%1000) / 1000.0);
 }
 
 // *** generate a point coordinate in the world
@@ -215,14 +228,14 @@ QPointF MidiGraphicTranslator::generateRandomWorldCoordinates(void) const
     int SY = (int) (worldHeight * zoomer);
     int DX = (int) (worldUpLeftX * zoomer);
     int DY = (int) (worldUpLeftY * zoomer);
-    qCDebug(GRgrp,"SX %d SY %d DX %d DY %d => (%+3.1f,%+3.1f)\n",SX,SY,DX,DY,(qreal)(DX + (rand()%SX)) / zoomer,(qreal)(DY + (rand()%SY)) / zoomer);
+    qCDebug(GRgrp,"Translator #%02d SX %d SY %d DX %d DY %d => (%+3.1f,%+3.1f)\n",getDId(),SX,SY,DX,DY,(qreal)(DX + (rand()%SX)) / zoomer,(qreal)(DY + (rand()%SY)) / zoomer);
     return(QPointF((qreal) (DX + (rand()%SX)) / zoomer,(qreal) (DY + (rand()%SY)) / zoomer));
 }
 
 // *** store the thing of a note
 void MidiGraphicTranslator::setNoteThing(septet note, void *thing) {
 
-    qCDebug(GRgrp,"store %p in note %d\n",thing,note);
+    qCDebug(GRgrp,"Translator #%02d store %p in note %d\n",getDId(),thing,note);
     noteThing[Midivent::septetFilter(note)] = thing;
     return;
 }
@@ -230,34 +243,58 @@ void MidiGraphicTranslator::setNoteThing(septet note, void *thing) {
 // *** retreive the thing of a note
 void *MidiGraphicTranslator::getNoteThing(septet note) const {
 
-    qCDebug(GRgrp,"retrive thing of note %d = %p\n",note,noteThing[Midivent::septetFilter(note)]);
+    qCDebug(GRgrp,"Translator #%02d retrive thing of note %d = %p\n",getDId(),note,noteThing[Midivent::septetFilter(note)]);
     return(noteThing[Midivent::septetFilter(note)]);
 }
 
 // *** get Note Name
 QString MidiGraphicTranslator::getNoteName(septet note) const  {
     switch (note%12)    {
-        case  0: return(QStringLiteral(" C")); break;
+        case  0: return(QStringLiteral("C")); break;
         case  1: return(QStringLiteral("C#")); break;
-        case  2: return(QStringLiteral(" D")); break;
+        case  2: return(QStringLiteral("D")); break;
         case  3: return(QStringLiteral("Eb")); break;
-        case  4: return(QStringLiteral(" E")); break;
-        case  5: return(QStringLiteral(" F")); break;
+        case  4: return(QStringLiteral("E")); break;
+        case  5: return(QStringLiteral("F")); break;
         case  6: return(QStringLiteral("F#")); break;
-        case  7: return(QStringLiteral(" G")); break;
+        case  7: return(QStringLiteral("G")); break;
         case  8: return(QStringLiteral("G#")); break;
-        case  9: return(QStringLiteral(" A")); break;
+        case  9: return(QStringLiteral("A")); break;
         case 10: return(QStringLiteral("Bb")); break;
-        case 11: return(QStringLiteral(" B")); break;
+        case 11: return(QStringLiteral("B")); break;
         default:
-            qCCritical(GUtru,"unknpown note\n");
+            qCCritical(GUtru,"Translator #%02d unknown note\n",getDId());
     }
     return(QStringLiteral(" H"));
 }
 
-// *** get Note Octave
-int MidiGraphicTranslator::getNoteOctave(septet note) const  {
-    return((note/12)-2);
+// *** clean Graphic Layer = remove all item of the graphic Layer from the scene
+void MidiGraphicTranslator::cleanGraphicLayer(void) {
+
+    qCDebug(GRgrp,"Translator #%02d decision to clean the whole graphicLayer %p\n",getDId(),graphicLayer);
+    QList <QGraphicsItem *> itemList = graphicLayer->childItems();
+    qCDebug(GRgrp,"Translator #%02d graphicLayer %p had %d items before cleaning\n",getDId(),graphicLayer,itemList.size());
+    for (int i = 0; i < itemList.size(); i++) {
+        //graphicLayer->removeFromGroup(itemList.at(i));
+        (graphicLayer->scene())->removeItem(itemList.at(i));
+    }
+    itemList = graphicLayer->childItems();
+    qCDebug(GRgrp,"Translator #%02d graphicLayer %p has now %d items after\n",getDId(),graphicLayer,itemList.size());
+}
+
+// *** clean remove every results of previously received Midivent
+void MidiGraphicTranslator::cleanMidiventContext(void) {
+
+    cleanGraphicLayer();
+    nbNoteCurrentlyOn = 0;
+    nbRecievedNoteOn = 0;
+    sumReceivedNoteOn = 0;
+    averageReceivedNoteOn = 64;
+    for (int i = 0; i < 128; i++)   {
+        if (noteThing[i] != 0)  {
+            noteThing[i] = 0;
+        }
+    }
 }
 
 
@@ -270,29 +307,29 @@ void MidiGraphicTranslator::receiveMidivent(Midivent *pevt)
     QList <QGraphicsItem *> itemList;
     QGraphicsItem *item = 0;
 
-    qCDebug(Mvent,"Translator #%02d (%p) receiving Midivent %p\n", internalId2displayId(instanceId),this,pevt);
+    qCDebug(Mvent,"Translator #%02d (%p) receiving Midivent %p\n",getDId(),this,pevt);
     switch (pevt->getType())  {
         case None:
-            qCDebug(Mvent,"Midivent is \"None\"\n"); break;
+            qCDebug(Mvent,"Translator #%02d Midivent is \"None\"\n",getDId()); break;
         case NoteOn:
             newNoteOnAnalysis(pevt->getNote(), pevt->getVelocity());
-            qCDebug(Mvent,"Translator #%02d Midivent is \"NoteOn %3d\" (%d notes currently on)\n",internalId2displayId(instanceId),pevt->getNote(),nbNoteCurrentlyOn);
+            qCDebug(Mvent,"Translator #%02d Midivent is \"NoteOn %3d\" (%d notes currently on)\n",getDId(),pevt->getNote(),nbNoteCurrentlyOn);
             processNoteOn(pevt->getNote(), pevt->getVelocity());
             break;
         case NoteOff:
             newNoteOffAnalysis(pevt->getNote(), pevt->getVelocity());
-            qCDebug(Mvent,"Translator #%02d Midivent is \"NoteOff %3d\" (%d notes currently on)\n",internalId2displayId(instanceId),pevt->getNote(),nbNoteCurrentlyOn);
+            qCDebug(Mvent,"Translator #%02d Midivent is \"NoteOff %3d\" (%d notes currently on)\n",getDId(),pevt->getNote(),nbNoteCurrentlyOn);
             processNoteOff(pevt->getNote(), pevt->getVelocity());
             break;
         default:
-            qCDebug(Mvent,"unknown \"%d\", \"%d\"\n",pevt->getType(),pevt->getNote());
+            qCDebug(Mvent,"Translator #%02d unknown \"%d\", \"%d\"\n",getDId(),pevt->getType(),pevt->getNote());
     }
 }
 
 
 // *** first, let's analyse consequences of a new noteOn
 void MidiGraphicTranslator::newNoteOnAnalysis(septet note, septet velocity)   {
-    qCDebug(Mvent,"Translator #%02d MidiGraphicTranslator::newNoteOnAnalysis(%d,%d)\n",internalId2displayId(instanceId),note, velocity);
+    qCDebug(Mvent,"Translator #%02d MidiGraphicTranslator::newNoteOnAnalysis(%d,%d)\n",getDId(),note, velocity);
     ++nbRecievedNoteOn;
     ++nbNoteCurrentlyOn;
     sumReceivedNoteOn += (int)(note);
@@ -303,27 +340,30 @@ void MidiGraphicTranslator::newNoteOnAnalysis(septet note, septet velocity)   {
 // *** transform a Midivent noteOn in graphic action
 void MidiGraphicTranslator::processNoteOn(septet note, septet velocity)   {
 
-    qCDebug(GRgrp,"MidiGraphicTranslator::processNoteOn updates Translator graphic Layer %p\n",graphicLayer);
+    qCDebug(GRgrp,"Translator#%02d MidiGraphicTranslator::processNoteOn updates Translator graphic Layer %p\n",getDId(),graphicLayer);
     QGraphicsTextItem *pText = new  QGraphicsTextItem;
     QPointF where = generateRandomWorldCoordinates();
-    qCDebug(GRgrp,"drawing text %p in (%+3.1f,%+3.1f)\n",pText,where.x(),where.y());
-    sprintf(bla,"#%02d",instanceId);
+    qCDebug(GRgrp,"Translator #%02d drawing text %p in (%+3.1f,%+3.1f)\n",getDId(),pText,where.x(),where.y());
+    sprintf(bla,"Translator #%02d",getDId());
     pText->setPlainText(QString(bla));
+    pText->setFont(QFont("Impact",20));
     pText->setPos(where);
-    qCDebug(GRgrp,"the graphicLayer scene is %p\n",graphicLayer->scene());
-    qCDebug(GRgrp,"add text %p to group %p\n",pText,graphicLayer);
+    QRectF englob = pText->boundingRect();
+    pText->moveBy(-englob.width()/2.0,-englob.height()/2.0);
+    qCDebug(GRgrp,"Translator #%02d the graphicLayer scene is %p\n",getDId(),graphicLayer->scene());
+    qCDebug(GRgrp,"Translator #%02d add text %p to group %p\n",getDId(),pText,graphicLayer);
     graphicLayer->addToGroup((QGraphicsItem *)(pText));
-    qCDebug(GRgrp,"store the item in its scene %p\n",pText->scene());
+    qCDebug(GRgrp,"Translator #%02d store the item in its scene %p\n",getDId(),pText->scene());
     setNoteThing(note,(void *)((QGraphicsItem *)(pText)));
     QList <QGraphicsItem *> itemList = graphicLayer->childItems();
-    qCDebug(GRgrp,"TR #%02d (%p) graphicLayer %p has %d items\n",instanceId,this,graphicLayer,itemList.size());
+    qCDebug(GRgrp,"Translator #%02d (%p) graphicLayer %p has %d items\n",getDId(),this,graphicLayer,itemList.size());
     return;
 }
 
 
 // *** first, let's analyse consequences of a new noteOff
 void MidiGraphicTranslator::newNoteOffAnalysis(septet note, septet velocity)   {
-    qCDebug(Mvent,"Translator #%02d MidiGraphicTranslator::newNoteOffAnalysis(%d,%d)\n",internalId2displayId(instanceId), note, velocity);
+    qCDebug(Mvent,"Translator #%02d MidiGraphicTranslator::newNoteOffAnalysis(%d,%d)\n",getDId(), note, velocity);
     --nbNoteCurrentlyOn;
     if (nbNoteCurrentlyOn < 0)   {
         nbNoteCurrentlyOn = 0;
@@ -336,30 +376,20 @@ void MidiGraphicTranslator::newNoteOffAnalysis(septet note, septet velocity)   {
 void MidiGraphicTranslator::processNoteOff(unsigned char note, unsigned char velocity)   {
 
     QList <QGraphicsItem *> itemList;
-    qCDebug(GRgrp,"MidiGraphicTranslator::processNoteOff updates Translator graphic Layer %p\n",graphicLayer);
+    qCDebug(GRgrp,"Translator #%02d MidiGraphicTranslator::processNoteOff updates Translator graphic Layer %p\n",getDId(),graphicLayer);
 
     QGraphicsItem *item = (QGraphicsItem *)(getNoteThing(note));
     if (item == 0)  {
-        qCWarning(GRgrp,"TR #%02d (%p) retreive NULL graphics item in noteThing for note %d\n",instanceId,this,note);
-        /*
-        qCDebug(GRgrp,"TR #%02d decision to clean the whole graphicLayer %p\n",instanceId,this,graphicLayer);
-        itemList = graphicLayer->childItems();
-        qCDebug(GRgrp,"graphicLayer %p had %d items before \n",graphicLayer,itemList.size());
-        for (int i = 0; i < itemList.size(); i++) {
-            //graphicLayer->removeFromGroup(itemList.at(i));
-            (graphicLayer->scene())->removeItem(itemList.at(i));
-        }
-        itemList = graphicLayer->childItems();
-        qCDebug(GRgrp,"graphicLayer %p has now %d items after\n",graphicLayer,itemList.size());
-        */
+        qCWarning(GRgrp,"Translator #%02d (%p) retreive NULL graphics item in noteThing for note %d\n",getDId(),this,note);
+        // cleanGraphicLayer();
         return;
     }
-    qCDebug(GRgrp,"the item scene is %p\n",item->scene());
-    qCDebug(GRgrp,"the graphicLayer scene is %p\n",graphicLayer->scene());
-    qCDebug(GRgrp,"TR #%02d (%p) remove item %p from graphicLayer %p\n",instanceId,this,item,graphicLayer);
+    qCDebug(GRgrp,"Translator #%02d the item scene is %p\n",getDId(),item->scene());
+    qCDebug(GRgrp,"Translator #%02d the graphicLayer scene is %p\n",getDId(),graphicLayer->scene());
+    qCDebug(GRgrp,"Translator #%02d  (%p) remove item %p from graphicLayer %p\n",getDId(),this,item,graphicLayer);
     setNoteThing(note,0);
     (graphicLayer->scene())->removeItem(item);
     itemList = graphicLayer->childItems();
-    qCDebug(GRgrp,"graphicLayer %p has now %d items after\n",graphicLayer,itemList.size());
+    qCDebug(GRgrp,"Translator #%02d graphicLayer %p has now %d items after\n",getDId(),graphicLayer,itemList.size());
     return;
 }

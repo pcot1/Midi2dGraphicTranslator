@@ -23,11 +23,6 @@
 #include <string>
 #include <vector>
 
-                                                // No MidiSource selected
-const int undefinedMidiSource = -1;
-                                                // siez of small buttons (rendering order)
-const int smallButtonHeight = 26;
-const int smallButtonWidth = 26;
 
 /*********************************************************************************************************************/
 //
@@ -44,14 +39,18 @@ public:
     virtual ~MidiGraphicTranslator();
                                                     // trivial accessor "get"
     int getInstanceId(void) const                                   { return(instanceId); }
+    int getDId(void) const                                          { return(instanceId+1); }
     QString getTranslatorName(void) const                           { return(MidiGraphicTranslatorName->text()); }
     QGraphicsItemGroup *getTranslatorGraphicLayer(void) const       { return(graphicLayer); }
     septet getAverageReceivedNoteOn() const                         { return(averageReceivedNoteOn); }
     QString getNoteName(septet note) const;         // get the name of the given note
-    int getNoteOctave(septet note) const;           // get the octave of the given note
+    int getOctaveIdOfNote(septet note) const                        { return((note/12)-2); }         // get the octave of the given note
+    int getNoteIdInOctave(septet note) const                        { return(note%12); }             // get note id within its Octave (C = 0)
     void setTranslatorName(QString name);           // accessor "set"
 
     void doUpgradeNumberOfMidiSources(int nbMS);    // recieving an outside request MidiSource list update
+    virtual void cleanMidiventContext(void);        // remove every results of previously received Midivent
+    void cleanGraphicLayer(void);                   // remove graphics items from the scene
     //void registerMidiSource(void (*pf)(Midivent&), int msId);
     virtual void printObject(void) const;           // debug
     virtual void receiveMidivent(Midivent *pevt);   // trigger translator action
@@ -71,6 +70,7 @@ protected:
     void addLayout(QLayout *layout);                // add an applicative layout
     QGraphicsItemGroup *graphicLayer;               // the translator part of the scene
     QPointF generateRandomWorldCoordinates(void) const;     // utils
+    qreal generateRandomRealNormalizedValue(void) const;    // utils
     void updateListOfMidiSourcesInComboBox(int nbMS);       // private to update MidiSource ComboBox
     void *getNoteThing(septet note) const;         // get the thing of the given note
     void setNoteThing(septet note, void *thing);   // set the note thing of the given note

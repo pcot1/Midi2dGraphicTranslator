@@ -28,6 +28,12 @@ int  RtMidiPorts::scanRtMidiPortsNames(QWidget *widget, RtMidiIn *pRtMidiPort, Q
         exit(EXIT_FAILURE);
     }
     qCDebug(Minit,"rtMidiIn has found %d ports\n",nbMidiPorts);
+
+    if (nbMidiPorts == 0)   {
+        QMessageBox::information(widget,"no MIDI Port available\n","terminating application !");
+        exit(EXIT_FAILURE);
+    }
+
     for (unsigned int i = 0; i < nbMidiPorts; i++) {
         try {
             existingMidiPortsNames.append((pRtMidiPort->getPortName(i)).c_str());

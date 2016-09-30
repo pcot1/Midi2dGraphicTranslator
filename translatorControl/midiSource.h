@@ -45,6 +45,8 @@ public:
     void receiveMidiMessage(std::vector<unsigned char> *message); // Midi Message enter point
 public slots:
     void updateAvailableMidiPortList(QStringList *midiPortNames);   //request update of MidiPort list
+protected :
+    void cleanMidiventContextOfConsumers(void) const;
 signals:
     void myMidiPortHasChanged(int,int);             // signal to gui to change listening Midi Port
 private slots:

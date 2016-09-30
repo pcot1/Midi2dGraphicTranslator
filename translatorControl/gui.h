@@ -14,6 +14,7 @@
 #include "midiGraphicTranslator.h"
 #include "one2OneTranslator.h"
 #include "noteNameTranslator.h"
+#include "polygonTranslator.h"
 #include "graphicDisplayer.h"
 
 const int nbMaxMidiSources = 16;

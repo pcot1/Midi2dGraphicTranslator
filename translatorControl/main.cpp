@@ -9,7 +9,6 @@
 
 int main(int argc, char *argv[])
 {
-    //setvbuf(stdout, (char*)NULL, _IONBF, 0);            // just for debug printf to console
     srand (time(NULL));                                 // init (seed) random generator
     //qInstallMessageHandler(myMessageOutput);
     QApplication app(argc, argv);
